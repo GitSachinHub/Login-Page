@@ -2112,20 +2112,21 @@ button, .btn {
   font-weight: 500;
 }
 
-/* Coming Soon Screen */
+/* Coming Soon Screen (Full-Screen Immersive Animated Experience) */
 #coming-soon-screen {
   position: fixed;
   inset: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  z-index: 999;
-  background: rgba(8, 10, 18, 0.88);
-  backdrop-filter: blur(20px);
-  padding: 20px;
+  z-index: 9999;
+  background: #070913;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 16px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 #coming-soon-screen.active {
@@ -2133,25 +2134,94 @@ button, .btn {
   pointer-events: auto;
 }
 
-.coming-soon-card {
-  position: relative;
-  max-width: 680px;
-  width: 100%;
-  padding: 46px 38px;
-  border-radius: 28px;
-  background: rgba(18, 22, 34, 0.78);
-  backdrop-filter: blur(32px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7), 0 0 45px rgba(99, 102, 241, 0.12);
-  text-align: center;
+/* Ambient Aurora Glow Background */
+.cs-aurora-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
   overflow: hidden;
-  animation: csFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 0;
 }
 
-@keyframes csFadeUp {
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.35;
+}
+
+.aurora-1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #6366f1, #4338ca);
+  top: -120px;
+  left: 10%;
+  animation: floatAurora1 15s infinite alternate ease-in-out;
+}
+
+.aurora-2 {
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, #ec4899, #c026d3);
+  bottom: -150px;
+  right: 5%;
+  animation: floatAurora2 18s infinite alternate ease-in-out;
+}
+
+.aurora-3 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #06b6d4, #2563eb);
+  top: 35%;
+  left: 50%;
+  animation: floatAurora3 20s infinite alternate ease-in-out;
+}
+
+.cs-grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.8;
+}
+
+@keyframes floatAurora1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(80px, 60px) scale(1.15); }
+  100% { transform: translate(-40px, 90px) scale(0.95); }
+}
+
+@keyframes floatAurora2 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-70px, -50px) scale(1.12); }
+  100% { transform: translate(50px, -80px) scale(0.9); }
+}
+
+@keyframes floatAurora3 {
+  0% { transform: translate(-50%, 0) scale(1); }
+  50% { transform: translate(-30%, -60px) scale(1.2); }
+  100% { transform: translate(-60%, 50px) scale(0.85); }
+}
+
+/* Coming Soon Wrapper */
+.coming-soon-wrapper {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  animation: csSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes csSlideUp {
   0% {
     opacity: 0;
-    transform: translateY(24px) scale(0.97);
+    transform: translateY(32px) scale(0.98);
   }
   100% {
     opacity: 1;
@@ -2159,90 +2229,89 @@ button, .btn {
   }
 }
 
-/* Ambient glow orbs */
-.cs-glow-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(70px);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.cs-glow-1 {
-  width: 220px;
-  height: 220px;
-  background: rgba(99, 102, 241, 0.22);
-  top: -60px;
-  left: -50px;
-}
-
-.cs-glow-2 {
-  width: 200px;
-  height: 200px;
-  background: rgba(236, 72, 153, 0.18);
-  bottom: -50px;
-  right: -50px;
-}
-
-/* Badge */
-.cs-badge {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
+/* Top Navigation Bar */
+.cs-top-bar {
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 18px;
-  background: rgba(99, 102, 241, 0.12);
-  border: 1px solid rgba(99, 102, 241, 0.36);
-  border-radius: 999px;
-  color: #a5b4fc;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  margin-bottom: 20px;
-}
-
-.pulse-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #6366f1;
-  box-shadow: 0 0 8px #6366f1;
-  animation: pulseGlow 1.8s infinite;
-}
-
-@keyframes pulseGlow {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.4;
-    transform: scale(1.25);
-  }
-}
-
-/* User Greeting Pill */
-.user-greeting-pill {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  padding: 8px 18px 8px 10px;
-  background: rgba(255, 255, 255, 0.04);
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-radius: 20px;
+  background: rgba(15, 20, 35, 0.65);
+  backdrop-filter: blur(28px);
   border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.cs-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cs-brand-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(99, 102, 241, 0.4);
+}
+
+.cs-brand-name h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin: 0;
+  color: #f8fafc;
+}
+
+.cs-brand-name span {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  display: block;
+}
+
+/* User Pill in Header */
+.cs-user-pill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 14px 6px 6px;
   border-radius: 999px;
-  margin: 0 auto 24px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cs-avatar-ring {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(135deg, #6366f1, #ec4899);
 }
 
 .cs-avatar {
-  width: 44px;
-  height: 44px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid rgba(99, 102, 241, 0.6);
-  box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+  display: block;
+}
+
+.cs-online-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2px solid #0b0f19;
+  box-shadow: 0 0 6px #10b981;
 }
 
 .cs-user-info {
@@ -2250,161 +2319,403 @@ button, .btn {
 }
 
 .cs-user-info h4 {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: #f8fafc;
   margin: 0;
 }
 
-.cs-user-info p {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  margin: 0;
+.cs-user-info span {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  display: block;
 }
 
-.cs-status-tag {
+.cs-signout-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: #cbd5e1;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #34d399;
-  background: rgba(52, 211, 153, 0.12);
-  padding: 5px 12px;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-left: 4px;
+}
+
+.cs-signout-icon-btn:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #f87171;
+  transform: scale(1.05);
+}
+
+/* Main Hero Showcase Section */
+.cs-hero-section {
+  text-align: center;
+  padding: 20px 10px 0;
+}
+
+.cs-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 20px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.35);
   border-radius: 999px;
-  border: 1px solid rgba(52, 211, 153, 0.28);
+  margin-bottom: 24px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
 }
 
-.cs-status-tag svg {
-  width: 14px;
-  height: 14px;
+.cs-ping-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6366f1;
+  box-shadow: 0 0 10px #6366f1;
+  animation: pulseGlow 1.8s infinite;
 }
 
-/* Title & Subtitle */
-.cs-title {
-  position: relative;
-  z-index: 1;
+.cs-badge-text {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #c7d2fe;
+}
+
+.cs-headline {
   font-family: 'Playfair Display', serif;
-  font-size: 2.1rem;
-  line-height: 1.25;
-  margin: 0 0 14px;
-  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
+  font-size: 3.4rem;
+  line-height: 1.18;
+  font-weight: 700;
+  margin: 0 0 18px;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
+}
+
+.cs-animated-gradient {
+  background: linear-gradient(90deg, #818cf8, #c084fc, #f472b6, #38bdf8, #818cf8);
+  background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  animation: gradientShift 6s infinite linear;
 }
 
-.cs-subtitle {
-  position: relative;
-  z-index: 1;
-  font-size: 0.95rem;
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.cs-rotating-tagline {
+  font-size: 1.15rem;
   color: #94a3b8;
-  line-height: 1.6;
-  max-width: 520px;
-  margin: 0 auto 30px;
+  margin: 0 auto 38px;
+  max-width: 600px;
 }
 
-/* Features Grid */
-.cs-features-grid {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.cs-dynamic-word {
+  font-weight: 700;
+  color: #60a5fa;
+  display: inline-block;
+  min-width: 140px;
+  text-align: left;
+  border-bottom: 2px solid #60a5fa;
+  padding-bottom: 2px;
+  transition: all 0.3s ease;
+}
+
+/* Live Animated Countdown Timer */
+.cs-countdown-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   gap: 14px;
-  margin-bottom: 34px;
+  padding: 22px 34px;
+  border-radius: 26px;
+  background: rgba(16, 21, 38, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(28px);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55), 0 0 30px rgba(99, 102, 241, 0.12);
+  margin-bottom: 38px;
 }
 
-.cs-feature-card {
-  padding: 20px 14px;
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+.cs-countdown-box {
+  min-width: 82px;
+  padding: 12px 14px;
   border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  text-align: center;
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
-.cs-feature-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(99, 102, 241, 0.35);
-  background: rgba(255, 255, 255, 0.04);
+.cs-countdown-box:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.4);
 }
 
-.cs-icon-box {
-  width: 42px;
-  height: 42px;
+.cs-countdown-box.highlight {
+  border-color: rgba(99, 102, 241, 0.45);
+  background: rgba(99, 102, 241, 0.12);
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.25);
+}
+
+.cs-countdown-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.cs-countdown-lbl {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #94a3b8;
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.cs-cd-sep {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.35);
+  animation: blinkSep 1.2s infinite;
+}
+
+@keyframes blinkSep {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Progress Bar */
+.cs-progress-container {
+  max-width: 620px;
+  margin: 0 auto 44px;
+  text-align: left;
+}
+
+.cs-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.84rem;
+  color: #cbd5e1;
+  margin-bottom: 9px;
+  font-weight: 500;
+}
+
+.cs-progress-percent {
+  color: #a5b4fc;
+  font-weight: 700;
+}
+
+.cs-progress-track {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  position: relative;
+}
+
+.cs-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4f46e5, #8b5cf6, #ec4899);
+  position: relative;
+  overflow: hidden;
+}
+
+.cs-progress-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  animation: shineMove 2.2s infinite;
+}
+
+@keyframes shineMove {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Feature Spotlight Cards Row */
+.cs-feature-cards-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 44px;
+}
+
+.cs-card {
+  padding: 24px 18px;
+  border-radius: 20px;
+  background: rgba(16, 22, 38, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  text-align: left;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.cs-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(20, 27, 48, 0.75);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.55), 0 0 24px rgba(99, 102, 241, 0.15);
+}
+
+.cs-card-icon-glow {
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
-  background: rgba(99, 102, 241, 0.14);
-  color: #818cf8;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 12px;
+  margin-bottom: 16px;
 }
 
-.cs-icon-box svg {
-  width: 20px;
-  height: 20px;
+.cs-card-icon-glow.purple {
+  background: rgba(168, 85, 247, 0.14);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
 }
 
-.cs-feature-card h4 {
-  font-size: 0.88rem;
-  font-weight: 600;
-  margin-bottom: 6px;
-  color: #f1f5f9;
+.cs-card-icon-glow.cyan {
+  background: rgba(6, 182, 212, 0.14);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
 }
 
-.cs-feature-card p {
-  font-size: 0.74rem;
-  color: #64748b;
-  line-height: 1.45;
+.cs-card-icon-glow.gold {
+  background: rgba(234, 179, 8, 0.14);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  box-shadow: 0 0 15px rgba(234, 179, 8, 0.2);
+}
+
+.cs-card-icon-glow.green {
+  background: rgba(16, 185, 129, 0.14);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+}
+
+.cs-card h4 {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0 0 8px;
+}
+
+.cs-card p {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  line-height: 1.5;
   margin: 0;
 }
 
-/* Action Row */
-.cs-action-row {
-  position: relative;
-  z-index: 1;
+/* Action Buttons Container */
+.cs-actions-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 18px;
   flex-wrap: wrap;
 }
 
-.cs-logout-btn {
+.cs-action-btn {
+  padding: 14px 30px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 22px;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
 }
 
-.cs-preview-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 22px;
+.cs-glow-btn {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45);
+}
+
+.cs-glow-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.65), 0 0 15px rgba(139, 92, 246, 0.5);
+}
+
+/* Footer */
+.cs-footer {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #64748b;
+  padding-top: 10px;
+}
+
+.cs-footer strong {
+  color: #94a3b8;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 900px) {
+  .cs-headline {
+    font-size: 2.6rem;
+  }
+  .cs-feature-cards-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 640px) {
-  .coming-soon-card {
-    padding: 32px 20px;
-  }
-  
-  .cs-title {
-    font-size: 1.6rem;
-  }
-  
-  .cs-features-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .user-greeting-pill {
+  .cs-top-bar {
     flex-direction: column;
-    text-align: center;
-    border-radius: 20px;
+    gap: 12px;
+    align-items: center;
     padding: 14px;
   }
-
-  .cs-user-info {
-    text-align: center;
+  .cs-headline {
+    font-size: 2rem;
+  }
+  .cs-feature-cards-row {
+    grid-template-columns: 1fr;
+  }
+  .cs-countdown-container {
+    gap: 8px;
+    padding: 16px 18px;
+  }
+  .cs-countdown-box {
+    min-width: 60px;
+    padding: 8px 6px;
+  }
+  .cs-countdown-num {
+    font-size: 1.6rem;
+  }
+  .cs-cd-sep {
+    font-size: 1.3rem;
+  }
+  .cs-actions-container {
+    flex-direction: column;
+    width: 100%;
+  }
+  .cs-action-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
+
 

@@ -232,63 +232,155 @@
     </div>
   </div>
 
-  <!-- Post-Login "Coming Soon" Landing Screen -->
+  <!-- Post-Login "Coming Soon" Landing Screen (Fully Animated) -->
   <div id="coming-soon-screen" class="overlay-screen hide">
-    <div class="coming-soon-card glass-panel">
-      <!-- Ambient Glow Orbs -->
-      <div class="cs-glow-orb cs-glow-1"></div>
-      <div class="cs-glow-orb cs-glow-2"></div>
+    <!-- Animated Nebula and Particle Aurora Glow -->
+    <div class="cs-aurora-bg">
+      <div class="aurora-blob aurora-1"></div>
+      <div class="aurora-blob aurora-2"></div>
+      <div class="aurora-blob aurora-3"></div>
+      <div class="cs-grid-overlay"></div>
+    </div>
 
-      <div class="cs-badge">
-        <span class="pulse-dot"></span>
-        <span>COMING SOON</span>
+    <!-- Main Container Wrapper -->
+    <div class="coming-soon-wrapper">
+      
+      <!-- Top Navigation Header -->
+      <header class="cs-top-bar glass-panel">
+        <div class="cs-brand">
+          <div class="cs-brand-icon">
+            <i data-lucide="book-open"></i>
+          </div>
+          <div class="cs-brand-name">
+            <h3>MY BOOK</h3>
+            <span>Personal Life OS</span>
+          </div>
+        </div>
+
+        <div class="cs-user-pill" id="cs-user-pill">
+          <div class="cs-avatar-ring">
+            <img id="cs-user-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80" alt="Avatar" class="cs-avatar" />
+            <span class="cs-online-dot"></span>
+          </div>
+          <div class="cs-user-info">
+            <h4 id="cs-user-name">Sachin Kumar</h4>
+            <span id="cs-user-email">kumarsachin21759@gmail.com</span>
+          </div>
+          <button type="button" id="cs-logout-btn" class="cs-signout-icon-btn" title="Sign Out">
+            <i data-lucide="log-out"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Hero Showcase Section -->
+      <div class="cs-hero-section">
+        
+        <div class="cs-hero-badge">
+          <span class="cs-ping-dot"></span>
+          <span class="cs-badge-text">SYSTEM V1.0 • CRAFTING IN PROGRESS</span>
+        </div>
+
+        <h1 class="cs-headline">
+          The Future of Your <br/>
+          <span class="cs-animated-gradient">Personal Sanctuary</span>
+        </h1>
+
+        <p class="cs-rotating-tagline">
+          Everything you love, documented in one place: 
+          <span id="cs-word-rotator" class="cs-dynamic-word">Your Memories</span>
+        </p>
+
+        <!-- Live Animated Countdown Timer -->
+        <div class="cs-countdown-container">
+          <div class="cs-countdown-box">
+            <div class="cs-countdown-num" id="cd-days">14</div>
+            <div class="cs-countdown-lbl">Days</div>
+          </div>
+          <span class="cs-cd-sep">:</span>
+          <div class="cs-countdown-box">
+            <div class="cs-countdown-num" id="cd-hours">08</div>
+            <div class="cs-countdown-lbl">Hours</div>
+          </div>
+          <span class="cs-cd-sep">:</span>
+          <div class="cs-countdown-box">
+            <div class="cs-countdown-num" id="cd-minutes">32</div>
+            <div class="cs-countdown-lbl">Minutes</div>
+          </div>
+          <span class="cs-cd-sep">:</span>
+          <div class="cs-countdown-box highlight">
+            <div class="cs-countdown-num" id="cd-seconds">45</div>
+            <div class="cs-countdown-lbl">Seconds</div>
+          </div>
+        </div>
+
+        <!-- Launch Progress Bar -->
+        <div class="cs-progress-container">
+          <div class="cs-progress-header">
+            <span><span><i data-lucide="sparkles" style="width:14px; height:14px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> Alpha Development Milestone</span></span>
+            <span class="cs-progress-percent">88% Complete</span>
+          </div>
+          <div class="cs-progress-track">
+            <div class="cs-progress-fill" style="width: 88%;">
+              <span class="cs-progress-shine"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Spotlight Cards -->
+        <div class="cs-feature-cards-row">
+          <div class="cs-card">
+            <div class="cs-card-icon-glow purple">
+              <i data-lucide="shield-check"></i>
+            </div>
+            <h4>Private Vault</h4>
+            <p>End-to-end PIN encryption for confidential docs & financials.</p>
+          </div>
+
+          <div class="cs-card">
+            <div class="cs-card-icon-glow cyan">
+              <i data-lucide="bot"></i>
+            </div>
+            <h4>AI Life Copilot</h4>
+            <p>Query your life notes, habits & memories with AI intelligence.</p>
+          </div>
+
+          <div class="cs-card">
+            <div class="cs-card-icon-glow gold">
+              <i data-lucide="line-chart"></i>
+            </div>
+            <h4>Life Analytics</h4>
+            <p>Interactive timeline charts for mood, wealth tracking & habits.</p>
+          </div>
+
+          <div class="cs-card">
+            <div class="cs-card-icon-glow green">
+              <i data-lucide="database"></i>
+            </div>
+            <h4>Firestore Sync</h4>
+            <p>Google authenticated profile & cloud data saved in realtime.</p>
+          </div>
+        </div>
+
+        <!-- Interactive Action Buttons -->
+        <div class="cs-actions-container">
+          <button type="button" id="cs-notify-btn" class="primary-btn cs-action-btn cs-glow-btn">
+            <i data-lucide="bell-ring"></i>
+            <span>Get VIP Launch Alert</span>
+          </button>
+          
+          <button type="button" id="cs-preview-app-btn" class="secondary-btn cs-action-btn">
+            <i data-lucide="compass"></i>
+            <span>Explore Life OS Prototype</span>
+          </button>
+        </div>
+
       </div>
 
-      <div class="user-greeting-pill" id="cs-user-pill">
-        <img id="cs-user-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80" alt="Avatar" class="cs-avatar" />
-        <div class="cs-user-info">
-          <h4 id="cs-user-name">Sachin Kumar</h4>
-          <p id="cs-user-email">kumarsachin21759@gmail.com</p>
-        </div>
-        <div class="cs-status-tag">
-          <i data-lucide="shield-check"></i>
-          <span>Verified</span>
-        </div>
-      </div>
+      <!-- Footer note -->
+      <footer class="cs-footer">
+        <p>Crafted with precision for <strong>Sachin Kumar</strong> • Secured by Google Firebase</p>
+      </footer>
 
-      <h1 class="cs-title">Something Extraordinary is Arriving Soon</h1>
-      <p class="cs-subtitle">
-        Welcome to your personal digital sanctuary! Your account details have been successfully authenticated with Google and safely synced to Firebase.
-      </p>
-
-      <div class="cs-features-grid">
-        <div class="cs-feature-card">
-          <div class="cs-icon-box"><i data-lucide="check-circle-2"></i></div>
-          <h4>Google Login</h4>
-          <p>Instant secure authentication via Firebase Auth</p>
-        </div>
-        <div class="cs-feature-card">
-          <div class="cs-icon-box"><i data-lucide="database"></i></div>
-          <h4>Firestore Synced</h4>
-          <p>User profile securely stored in Firestore DB</p>
-        </div>
-        <div class="cs-feature-card">
-          <div class="cs-icon-box"><i data-lucide="sparkles"></i></div>
-          <h4>Full Release</h4>
-          <p>Interactive Life OS experience launching shortly</p>
-        </div>
-      </div>
-
-      <div class="cs-action-row">
-        <button type="button" id="cs-preview-app-btn" class="secondary-btn cs-preview-btn">
-          <i data-lucide="compass"></i>
-          <span>Explore Life OS Prototype</span>
-        </button>
-        <button type="button" id="cs-logout-btn" class="primary-btn cs-logout-btn">
-          <i data-lucide="log-out"></i>
-          <span>Sign Out</span>
-        </button>
-      </div>
     </div>
   </div>
 

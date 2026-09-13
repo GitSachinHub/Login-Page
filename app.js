@@ -4072,11 +4072,81 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Google Sign-In Handler & Coming Soon Transition
+  // Google Sign-In Handler & Fully Animated Coming Soon Transition
   const googleLoginBtn = document.getElementById('google-login-btn');
   const comingSoonScreen = document.getElementById('coming-soon-screen');
   const csLogoutBtn = document.getElementById('cs-logout-btn');
   const csPreviewAppBtn = document.getElementById('cs-preview-app-btn');
+  const csNotifyBtn = document.getElementById('cs-notify-btn');
+
+  let countdownInterval = null;
+  let rotatorInterval = null;
+
+  function initComingSoonAnimations(user) {
+    // 1. Live Countdown Timer (Target: 14 Days from now)
+    const targetDate = new Date(Date.now() + (14 * 24 * 60 * 60 * 1000) + (8 * 60 * 60 * 1000) + (32 * 60 * 1000));
+    
+    clearInterval(countdownInterval);
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const distance = targetDate.getTime() - now;
+
+      if (distance < 0) {
+        clearInterval(countdownInterval);
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      const dEl = document.getElementById('cd-days');
+      const hEl = document.getElementById('cd-hours');
+      const mEl = document.getElementById('cd-minutes');
+      const sEl = document.getElementById('cd-seconds');
+
+      if (dEl) dEl.innerText = String(days).padStart(2, '0');
+      if (hEl) hEl.innerText = String(hours).padStart(2, '0');
+      if (mEl) mEl.innerText = String(minutes).padStart(2, '0');
+      if (sEl) sEl.innerText = String(seconds).padStart(2, '0');
+    };
+
+    updateCountdown();
+    countdownInterval = setInterval(updateCountdown, 1000);
+
+    // 2. Dynamic Rotating Word Tagline
+    const words = ["Your Memories", "Your Life Goals", "Your Private Vault", "Your Daily Journal", "Your Expense Tracker", "Your Digital Sanctuary"];
+    let wordIdx = 0;
+    const wordEl = document.getElementById('cs-word-rotator');
+
+    clearInterval(rotatorInterval);
+    rotatorInterval = setInterval(() => {
+      if (!wordEl) return;
+      wordEl.style.opacity = '0';
+      wordEl.style.transform = 'translateY(-8px)';
+      
+      setTimeout(() => {
+        wordIdx = (wordIdx + 1) % words.length;
+        wordEl.innerText = words[wordIdx];
+        wordEl.style.opacity = '1';
+        wordEl.style.transform = 'translateY(0)';
+      }, 250);
+    }, 2400);
+
+    // 3. VIP Alert Button Interaction
+    csNotifyBtn?.addEventListener('click', () => {
+      csNotifyBtn.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        csNotifyBtn.style.transform = 'scale(1)';
+        csNotifyBtn.classList.remove('cs-glow-btn');
+        csNotifyBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+        csNotifyBtn.innerHTML = `<i data-lucide="check-check"></i><span>VIP Access Reserved!</span>`;
+        lucide.createIcons();
+        showToast(`🎉 VIP Spot Confirmed! Updates will be sent to ${user?.email || 'your email'}.`, 'success');
+      }, 150);
+    });
+  }
 
   function showComingSoon(user) {
     loginScreen.classList.remove('active');
@@ -4090,10 +4160,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const emailEl = document.getElementById('cs-user-email');
     const avatarEl = document.getElementById('cs-user-avatar');
 
-    if (nameEl) nameEl.innerText = user.displayName || user.name || 'User';
-    if (emailEl) emailEl.innerText = user.email || 'user@gmail.com';
+    if (nameEl) nameEl.innerText = user.displayName || user.name || 'Sachin Kumar';
+    if (emailEl) emailEl.innerText = user.email || 'kumarsachin21759@gmail.com';
     if (avatarEl && user.photoURL) avatarEl.src = user.photoURL;
 
+    initComingSoonAnimations(user);
     lucide.createIcons();
   }
 
@@ -4132,6 +4203,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.FirebaseBridge) {
       await window.FirebaseBridge.logoutUser();
     }
+    clearInterval(countdownInterval);
+    clearInterval(rotatorInterval);
     comingSoonScreen.classList.remove('active');
     comingSoonScreen.classList.add('hide');
     loginScreen.classList.remove('hide');
@@ -4141,6 +4214,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   csPreviewAppBtn?.addEventListener('click', () => {
+    clearInterval(countdownInterval);
+    clearInterval(rotatorInterval);
     comingSoonScreen.classList.remove('active');
     comingSoonScreen.classList.add('hide');
     enterApp();
