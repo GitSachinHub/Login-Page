@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Book — Personal Life OS</title>
+  <!-- Google Fonts: Outfit (modern sans) & Playfair Display (serif for autobiography feel) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <!-- Lucide Icons for clean look -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Custom Styling -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Particle Background Canvas -->
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- Cinematic Intro Overlay -->
+  <div id="intro-screen" class="overlay-screen active">
+    <div class="intro-content">
+      <h1 class="intro-title">MY BOOK</h1>
+      <p class="intro-tagline">“Your Life. Your Story.”</p>
+      <div class="intro-divider">
+        <div class="light-sweep"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login/Auth Screen -->
+  <div id="login-screen" class="overlay-screen">
+    <div class="login-card glass-panel">
+      <div class="login-header">
+        <div class="login-logo">
+          <i data-lucide="book-open"></i>
+        </div>
+        <h2>MY BOOK</h2>
+        <p>Personal Life OS & Digital Sanctuary 🔐</p>
+      </div>
+
+      <!-- Segmented Tab Switcher -->
+      <div class="auth-tabs-nav">
+        <button type="button" id="tab-login-btn" class="auth-tab-btn active">
+          <i data-lucide="log-in"></i>
+          <span>Sign In</span>
+        </button>
+        <button type="button" id="tab-register-btn" class="auth-tab-btn">
+          <i data-lucide="user-plus"></i>
+          <span>Create Account</span>
+        </button>
+      </div>
+
+      <!-- Sign In Section -->
+      <div id="auth-login-panel">
+        <!-- 1-Click Demo Box -->
+        <div class="demo-quick-box">
+          <div class="demo-quick-info">
+            <strong><i data-lucide="sparkles"></i> Demo Account Available</strong>
+            <span>sachin@mybook.os • password123</span>
+          </div>
+          <button type="button" id="demo-fill-btn" class="demo-fill-btn">Fill Demo</button>
+        </div>
+
+        <!-- Saved Accounts Selector -->
+        <div id="saved-accounts-box" class="saved-accounts-container hide">
+          <div class="saved-accounts-title">Switch to saved user:</div>
+          <div id="saved-accounts-list" class="saved-accounts-list"></div>
+        </div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label for="login-email">Email Address</label>
+            <div class="input-wrapper">
+              <i data-lucide="mail"></i>
+              <input type="email" id="login-email" placeholder="name@example.com" required autocomplete="email">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <div class="input-wrapper">
+              <i data-lucide="lock"></i>
+              <input type="password" id="login-password" placeholder="Enter password" required autocomplete="current-password">
+              <button type="button" id="toggle-pwd-btn" class="icon-btn" title="Toggle password visibility">
+                <i data-lucide="eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="auth-sub-row">
+            <label for="login-remember">
+              <input type="checkbox" id="login-remember" checked>
+              <span>Keep me signed in</span>
+            </label>
+            <span style="font-size:0.75rem; color:var(--text-muted);">PIN Vault Protected</span>
+          </div>
+
+          <div id="login-error" class="auth-error-box hide">
+            <i data-lucide="alert-circle"></i>
+            <span id="login-error-text">Invalid email address or password.</span>
+          </div>
+
+          <button type="submit" class="primary-btn login-btn" id="login-submit-btn">
+            <span>Unlock Life OS</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+        </form>
+
+        <div class="auth-switch-link">
+          <span>Don't have an account?</span>
+          <button type="button" id="switch-to-register-btn">Create one now</button>
+        </div>
+      </div>
+
+      <!-- Register / Create Account Section -->
+      <div id="auth-register-panel" class="hide">
+        <form id="register-form">
+          <div class="form-group">
+            <label for="reg-name">Full Name</label>
+            <div class="input-wrapper">
+              <i data-lucide="user"></i>
+              <input type="text" id="reg-name" placeholder="e.g. Sachin Kumar" required autocomplete="name">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-email">Email Address</label>
+            <div class="input-wrapper">
+              <i data-lucide="mail"></i>
+              <input type="email" id="reg-email" placeholder="name@domain.com" required autocomplete="email">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-password">Password (min 6 characters)</label>
+            <div class="input-wrapper">
+              <i data-lucide="lock"></i>
+              <input type="password" id="reg-password" placeholder="Create strong password" required autocomplete="new-password" minlength="6">
+              <button type="button" id="toggle-reg-pwd-btn" class="icon-btn" title="Toggle password visibility">
+                <i data-lucide="eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Password strength meter -->
+          <div class="strength-meter-wrap">
+            <div class="strength-bar">
+              <div id="reg-strength-fill" class="strength-fill"></div>
+            </div>
+            <div class="strength-text">
+              <span>Security Strength:</span>
+              <strong id="reg-strength-label" style="color:var(--text-muted)">Too short</strong>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-confirm-password">Confirm Password</label>
+            <div class="input-wrapper">
+              <i data-lucide="shield-check"></i>
+              <input type="password" id="reg-confirm-password" placeholder="Re-enter password" required autocomplete="new-password">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-pin">Private Vault 4-Digit Security PIN</label>
+            <div class="input-wrapper">
+              <i data-lucide="key-round"></i>
+              <input type="password" id="reg-pin" placeholder="e.g. 1234" required maxlength="4" pattern="[0-9]{4}" autocomplete="off">
+            </div>
+          </div>
+
+          <div id="register-error" class="auth-error-box hide">
+            <i data-lucide="alert-circle"></i>
+            <span id="register-error-text">Please ensure all fields are filled properly.</span>
+          </div>
+
+          <button type="submit" class="primary-btn login-btn" id="register-submit-btn">
+            <span>Initialize Life OS Account</span>
+            <i data-lucide="sparkles"></i>
+          </button>
+        </form>
+
+        <div class="auth-switch-link">
+          <span>Already registered?</span>
+          <button type="button" id="switch-to-login-btn">Sign In to your account</button>
+        </div>
+      </div>
+
+      <div class="login-footer">
+        <span class="security-badge"><i data-lucide="shield-check"></i> SHA-256 Encrypted & Local Isolation</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Private Vault PIN Access Modal -->
+  <div id="vault-pin-modal" class="modal-overlay hide">
+    <div class="modal-content vault-pin-card glass-panel">
+      <div class="modal-header">
+        <i data-lucide="shield-alert" class="vault-alert-icon"></i>
+        <h3>Access Private Vault</h3>
+        <p>Please enter your 4-digit security PIN to unlock this session.</p>
+      </div>
+      <form id="vault-pin-form">
+        <div class="pin-input-container">
+          <input type="password" maxlength="4" pattern="[0-9]{4}" id="vault-pin-input" autofocus placeholder="••••" required autocomplete="off">
+        </div>
+        <div id="vault-pin-error" class="error-msg hide">Invalid PIN Code</div>
+        <div class="modal-actions">
+          <button type="button" id="cancel-vault-btn" class="secondary-btn">Cancel</button>
+          <button type="submit" class="primary-btn">Unlock Vault</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Life OS Workspace Container -->
+  <div id="app-container" class="hide">
+    
+    <!-- Sidebar Navigation -->
+    <aside id="app-sidebar">
+      <div class="sidebar-brand">
+        <i data-lucide="book-marked" class="brand-icon"></i>
+        <div class="brand-text">
+          <h2>MY BOOK</h2>
+          <span>Life OS v1.0</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="#dashboard" class="menu-item active" data-view="dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="#profile" class="menu-item" data-view="profile">
+          <i data-lucide="user-cog"></i>
+          <span>My Profile</span>
+        </a>
+        <a href="#journal" class="menu-item" data-view="journal">
+          <i data-lucide="pen-tool"></i>
+          <span>Daily Journal</span>
+        </a>
+        <a href="#memories" class="menu-item" data-view="memories">
+          <i data-lucide="image"></i>
+          <span>Memories</span>
+        </a>
+        <a href="#travel" class="menu-item" data-view="travel">
+          <i data-lucide="compass"></i>
+          <span>Travel Logs</span>
+        </a>
+        <a href="#money" class="menu-item" data-view="money">
+          <i data-lucide="wallet"></i>
+          <span>Expense & Money</span>
+        </a>
+        <a href="#college" class="menu-item" data-view="college">
+          <i data-lucide="graduation-cap"></i>
+          <span>College Hub</span>
+        </a>
+        <a href="#skills" class="menu-item" data-view="skills">
+          <i data-lucide="sparkles"></i>
+          <span>Skills & Learning</span>
+        </a>
+        <a href="#projects" class="menu-item" data-view="projects">
+          <i data-lucide="terminal"></i>
+          <span>Projects</span>
+        </a>
+        <a href="#goals" class="menu-item" data-view="goals">
+          <i data-lucide="target"></i>
+          <span>Goal Tracker</span>
+        </a>
+        <a href="#notes" class="menu-item" data-view="notes">
+          <i data-lucide="book-open"></i>
+          <span>Knowledge & Notes</span>
+        </a>
+        <a href="#people" class="menu-item" data-view="people">
+          <i data-lucide="users"></i>
+          <span>People & Contacts</span>
+        </a>
+        <a href="#tasks" class="menu-item" data-view="tasks">
+          <i data-lucide="check-square"></i>
+          <span>Tasks & Reminders</span>
+        </a>
+        <a href="#documents" class="menu-item" data-view="documents">
+          <i data-lucide="folder-lock"></i>
+          <span>Document Vault</span>
+        </a>
+        <a href="#analytics" class="menu-item" data-view="analytics">
+          <i data-lucide="line-chart"></i>
+          <span>Life Analytics</span>
+        </a>
+        <a href="#replay" class="menu-item" data-view="replay">
+          <i data-lucide="history"></i>
+          <span>Life Replay</span>
+        </a>
+        <a href="#ask-ai" class="menu-item" data-view="ask-ai">
+          <i data-lucide="bot"></i>
+          <span>Ask My Book</span>
+        </a>
+        <a href="#settings" class="menu-item" data-view="settings">
+          <i data-lucide="settings"></i>
+          <span>Settings Center</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-user-summary">
+        <img id="sb-profile-pic" src="" alt="Profile Image" class="user-avatar hide">
+        <div id="sb-profile-icon" class="avatar-fallback"><i data-lucide="user"></i></div>
+        <div class="sb-user-info">
+          <h4 id="sb-user-name">Sachii</h4>
+          <span id="sb-user-title">Life OS Authorized</span>
+        </div>
+        <button id="sidebar-lock-btn" class="icon-btn" title="Lock System">
+          <i data-lucide="log-out"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel Area -->
+    <main id="app-workspace">
+      <!-- Top header bar for quick search / mobile toggles -->
+      <header id="workspace-header">
+        <div class="header-left">
+          <button id="sidebar-toggle" class="icon-btn mobile-only">
+            <i data-lucide="menu"></i>
+          </button>
+          <div class="global-search-container">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" id="global-search-input" placeholder="Search across journal, goals, memories, trips...">
+            <div id="search-results-dropdown" class="glass-panel hide"></div>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="system-time" id="system-clock">00:00:00 AM</span>
+          <button id="quick-vault-btn" class="vault-indicator-btn" title="Access Private Vault">
+            <i data-lucide="lock"></i>
+            <span>Vault Locked</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Sub-view Workspace Content Panels -->
+      <div id="workspace-view-container">
+        
+        <!-- DASHBOARD VIEW -->
+        <section id="view-dashboard" class="workspace-view active"></section>
+
+        <!-- PROFILE VIEW -->
+        <section id="view-profile" class="workspace-view"></section>
+
+        <!-- JOURNAL VIEW -->
+        <section id="view-journal" class="workspace-view"></section>
+
+        <!-- MEMORIES VIEW -->
+        <section id="view-memories" class="workspace-view"></section>
+
+        <!-- TRAVEL VIEW -->
+        <section id="view-travel" class="workspace-view"></section>
+
+        <!-- EXPENSE & MONEY VIEW -->
+        <section id="view-money" class="workspace-view"></section>
+
+        <!-- COLLEGE HUB VIEW -->
+        <section id="view-college" class="workspace-view"></section>
+
+        <!-- SKILLS VIEW -->
+        <section id="view-skills" class="workspace-view"></section>
+
+        <!-- PROJECTS VIEW -->
+        <section id="view-projects" class="workspace-view"></section>
+
+        <!-- GOALS VIEW -->
+        <section id="view-goals" class="workspace-view"></section>
+
+        <!-- KNOWLEDGE & NOTES VIEW -->
+        <section id="view-notes" class="workspace-view"></section>
+
+        <!-- PEOPLE VIEW -->
+        <section id="view-people" class="workspace-view"></section>
+
+        <!-- TASKS VIEW -->
+        <section id="view-tasks" class="workspace-view"></section>
+
+        <!-- DOCUMENT VAULT VIEW -->
+        <section id="view-documents" class="workspace-view"></section>
+
+        <!-- LIFE ANALYTICS VIEW -->
+        <section id="view-analytics" class="workspace-view"></section>
+
+        <!-- LIFE REPLAY VIEW -->
+        <section id="view-replay" class="workspace-view"></section>
+
+        <!-- ASK AI VIEW -->
+        <section id="view-ask-ai" class="workspace-view"></section>
+
+        <!-- SETTINGS VIEW -->
+        <section id="view-settings" class="workspace-view"></section>
+
+      </div>
+    </main>
+
+    <!-- Floating Quick Add Menu Button & Overlay -->
+    <div id="quick-add-container">
+      <button id="quick-add-trigger" class="floating-action-btn" title="Quick Add New Entry">
+        <i data-lucide="plus"></i>
+      </button>
+      <div id="quick-add-menu" class="hide">
+        <button class="qa-item" data-action="journal"><i data-lucide="pen-tool"></i><span>Journal</span></button>
+        <button class="qa-item" data-action="expense"><i data-lucide="dollar-sign"></i><span>Expense</span></button>
+        <button class="qa-item" data-action="memory"><i data-lucide="image"></i><span>Memory</span></button>
+        <button class="qa-item" data-action="trip"><i data-lucide="compass"></i><span>Trip</span></button>
+        <button class="qa-item" data-action="goal"><i data-lucide="target"></i><span>Goal</span></button>
+        <button class="qa-item" data-action="note"><i data-lucide="book-open"></i><span>Note</span></button>
+        <button class="qa-item" data-action="project"><i data-lucide="terminal"></i><span>Project</span></button>
+        <button class="qa-item" data-action="person"><i data-lucide="user-plus"></i><span>Person</span></button>
+        <button class="qa-item" data-action="document"><i data-lucide="file-plus"></i><span>Document</span></button>
+        <button class="qa-item" data-action="task"><i data-lucide="check-square"></i><span>Task</span></button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Dynamic Global Modals (for form creation and details editing) -->
+  <div id="global-modal" class="modal-overlay hide">
+    <div class="modal-content glass-panel" id="global-modal-body">
+      <!-- Generated dynamically based on what we are editing -->
+    </div>
+  </div>
+
+  <!-- Toast Notification Hub -->
+  <div id="toast-hub"></div>
+
+  <!-- Script Code Loading -->
+  <script src="app.js"></script>
+</body>
+</html>
