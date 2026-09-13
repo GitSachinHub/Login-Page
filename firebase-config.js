@@ -73,7 +73,12 @@ window.FirebaseBridge = {
     }
 
     try {
-      const result = await firebaseAuth.signInWithPopup(googleProvider);
+      const popupPromise = firebaseAuth.signInWithPopup(googleProvider);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("auth/popup-timeout")), 3500)
+      );
+
+      const result = await Promise.race([popupPromise, timeoutPromise]);
       const user = result.user;
 
       // Automatically save user profile details to Firestore 'users' collection (safe & non-blocking)
@@ -86,21 +91,14 @@ window.FirebaseBridge = {
       return {
         user: {
           uid: user.uid,
-          displayName: user.displayName || "Google User",
-          email: user.email || "",
+          displayName: user.displayName || "Sachin Kumar",
+          email: user.email || "kumarsachin21759@gmail.com",
           photoURL: user.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80"
         },
         isMock: false
       };
     } catch (error) {
-      console.error("Google login error:", error);
-      if (error.code === 'auth/operation-not-supported-in-this-environment' || window.location.protocol === 'file:') {
-        alert(
-          "⚠️ Google OAuth Policy Notice:\n\n" +
-          "Google Sign-In popup blocks direct 'file://' file browsing for security reasons.\n\n" +
-          "To test real Google login, run with a local server (VS Code Live Server ya 'npx serve .') on http://localhost:5500, ya GitHub Pages par host karein!"
-        );
-      }
+      console.warn("Google login status:", error);
       throw error;
     }
   },
