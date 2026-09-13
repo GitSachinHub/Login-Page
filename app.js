@@ -4072,6 +4072,81 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Google Sign-In Handler & Coming Soon Transition
+  const googleLoginBtn = document.getElementById('google-login-btn');
+  const comingSoonScreen = document.getElementById('coming-soon-screen');
+  const csLogoutBtn = document.getElementById('cs-logout-btn');
+  const csPreviewAppBtn = document.getElementById('cs-preview-app-btn');
+
+  function showComingSoon(user) {
+    loginScreen.classList.remove('active');
+    loginScreen.classList.add('hide');
+    comingSoonScreen.classList.remove('hide');
+    setTimeout(() => {
+      comingSoonScreen.classList.add('active');
+    }, 20);
+
+    const nameEl = document.getElementById('cs-user-name');
+    const emailEl = document.getElementById('cs-user-email');
+    const avatarEl = document.getElementById('cs-user-avatar');
+
+    if (nameEl) nameEl.innerText = user.displayName || user.name || 'User';
+    if (emailEl) emailEl.innerText = user.email || 'user@gmail.com';
+    if (avatarEl && user.photoURL) avatarEl.src = user.photoURL;
+
+    lucide.createIcons();
+  }
+
+  googleLoginBtn?.addEventListener('click', async () => {
+    try {
+      if (!window.FirebaseBridge) {
+        showToast('Initializing Google Auth... please wait a moment.', 'info');
+        return;
+      }
+
+      googleLoginBtn.disabled = true;
+      googleLoginBtn.style.opacity = '0.7';
+
+      const { user, isMock } = await window.FirebaseBridge.loginWithGoogle();
+      
+      if (isMock) {
+        showToast('Preview mode: Demo Google account signed in!', 'success');
+      } else {
+        showToast(`Welcome, ${user.displayName}! Details saved to Firebase.`, 'success');
+      }
+
+      showComingSoon(user);
+    } catch (err) {
+      console.error('Google Sign-in failed:', err);
+      if (err.message && err.message !== 'Firebase configuration required.') {
+        showToast(err.message || 'Google sign-in was cancelled or failed.', 'error');
+      }
+    } finally {
+      googleLoginBtn.disabled = false;
+      googleLoginBtn.style.opacity = '1';
+    }
+  });
+
+  // Coming Soon Actions: Sign Out & Prototype Preview
+  csLogoutBtn?.addEventListener('click', async () => {
+    if (window.FirebaseBridge) {
+      await window.FirebaseBridge.logoutUser();
+    }
+    comingSoonScreen.classList.remove('active');
+    comingSoonScreen.classList.add('hide');
+    loginScreen.classList.remove('hide');
+    loginScreen.classList.add('active');
+    showToast('Successfully signed out.', 'info');
+    lucide.createIcons();
+  });
+
+  csPreviewAppBtn?.addEventListener('click', () => {
+    comingSoonScreen.classList.remove('active');
+    comingSoonScreen.classList.add('hide');
+    enterApp();
+    showToast('Life OS Prototype Preview Unlocked!', 'success');
+  });
+
   // Sign In Form Submission
   document.getElementById('login-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
