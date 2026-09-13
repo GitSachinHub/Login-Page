@@ -4009,12 +4009,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     introCompleted = true;
     intro.classList.remove('active');
 
-    // If coming soon session is active, go directly to coming soon
-    if (sessionStorage.getItem('mybook_coming_soon') === 'true') {
-      setTimeout(() => {
-        showComingSoon(Auth.currentUser || { name: 'Sachin Kumar', email: 'kumarsachin21759@gmail.com' });
-      }, 300);
-      return;
+    // Only go to Coming Soon if user is already logged in
+    const savedUserJson = sessionStorage.getItem('mybook_active_user');
+    if (sessionStorage.getItem('mybook_coming_soon') === 'true' && savedUserJson) {
+      try {
+        const user = JSON.parse(savedUserJson);
+        setTimeout(() => {
+          showComingSoon(user);
+        }, 300);
+        return;
+      } catch (e) {}
     }
 
     if (hasSession && Auth.isUnlocked) {
@@ -4209,30 +4213,50 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Expose to window for direct console/manual triggering if ever needed
   window.showComingSoon = showComingSoon;
 
-  // Google Sign-In Action: DIRECT & INSTANT Transition to Coming Soon Page!
-  googleLoginBtn?.addEventListener('click', () => {
-    sessionStorage.setItem('mybook_coming_soon', 'true');
-    
-    // 1. Direct and instant transition (0ms wait)
-    showComingSoon({
-      displayName: 'Sachin Kumar',
-      email: 'kumarsachin21759@gmail.com',
-      photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'
-    });
-    showToast('Signed in with Google! Welcome, Sachin.', 'success');
+  // Google Sign-In Action: Only open Coming Soon AFTER Successful Login!
+  googleLoginBtn?.addEventListener('click', async () => {
+    if (!window.FirebaseBridge) {
+      showToast('Initializing Google Auth... please wait a moment.', 'info');
+      return;
+    }
 
-    // 2. Concurrently link Firebase Google Account & Firestore in background
-    if (window.FirebaseBridge) {
-      window.FirebaseBridge.loginWithGoogle()
-        .then(res => {
-          if (res && res.user) {
-            showComingSoon(res.user);
-            console.log('Firebase Google account synced:', res.user);
-          }
-        })
-        .catch(err => {
-          console.warn('Background Firebase Auth notice:', err);
-        });
+    const originalHTML = googleLoginBtn.innerHTML;
+    try {
+      googleLoginBtn.disabled = true;
+      googleLoginBtn.style.opacity = '0.75';
+      googleLoginBtn.innerHTML = `
+        <span class="pulse-dot" style="width:10px; height:10px; display:inline-block; margin-right:8px;"></span>
+        <span>Signing in with Google...</span>
+      `;
+
+      // Trigger real Google Authentication
+      const result = await window.FirebaseBridge.loginWithGoogle();
+
+      // ONLY OPEN COMING SOON IF LOGIN WAS ACTUALLY SUCCESSFUL!
+      if (result && result.user) {
+        sessionStorage.setItem('mybook_coming_soon', 'true');
+        sessionStorage.setItem('mybook_active_user', JSON.stringify(result.user));
+
+        showComingSoon(result.user);
+        showToast(`Welcome, ${result.user.displayName}! Google sign-in successful.`, 'success');
+      }
+    } catch (err) {
+      console.error('Google Sign-in status:', err);
+      // Stay on login page and inform user
+      if (err.code === 'auth/popup-closed-by-user') {
+        showToast('Sign-in popup was closed.', 'info');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        showToast('Google provider is not enabled in Firebase Console.', 'error');
+      } else if (err.code === 'auth/unauthorized-domain') {
+        showToast('Domain not authorized in Firebase Console.', 'error');
+      } else if (err.message && err.message !== 'Firebase configuration required.') {
+        showToast(err.message, 'error');
+      }
+    } finally {
+      googleLoginBtn.disabled = false;
+      googleLoginBtn.style.opacity = '1';
+      googleLoginBtn.innerHTML = originalHTML;
+      lucide.createIcons();
     }
   });
 
@@ -4281,18 +4305,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Sign In Form Submission
   document.getElementById('login-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    sessionStorage.setItem('mybook_coming_soon', 'true');
-    const email = document.getElementById('login-email').value || 'sachin@mybook.os';
+    const email = document.getElementById('login-email').value;
     const pwd = document.getElementById('login-password').value;
     const remember = document.getElementById('login-remember')?.checked ?? true;
+    const errBox = document.getElementById('login-error');
+    const errText = document.getElementById('login-error-text');
 
-    showComingSoon({
-      displayName: 'Sachin Kumar',
-      name: 'Sachin Kumar',
-      email: email,
-      photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'
-    });
-    showToast('Welcome back, Sachin! Life OS Coming Soon active.', 'success');
+    const result = await Auth.login(email, pwd, remember);
+    // ONLY open Coming Soon if credentials are valid & login succeeds!
+    if (result.success) {
+      errBox?.classList.add('hide');
+      sessionStorage.setItem('mybook_coming_soon', 'true');
+      sessionStorage.setItem('mybook_active_user', JSON.stringify(result.user));
+      showComingSoon(result.user);
+      showToast(`Welcome back, ${result.user.name}!`, 'success');
+    } else {
+      errBox?.classList.remove('hide');
+      if (errText) errText.innerText = result.message;
+      errBox.style.animation = 'none';
+      errBox.offsetHeight;
+      errBox.style.animation = 'shake 0.4s ease-in-out';
+    }
   });
 
   // Register Form Submission
