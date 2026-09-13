@@ -2112,6 +2112,11 @@ button, .btn {
   font-weight: 500;
 }
 
+/* Global Utility: Hide elements strictly */
+.hide {
+  display: none !important;
+}
+
 /* Coming Soon Screen (Full-Screen Immersive Animated Experience) */
 #coming-soon-screen {
   position: fixed;
@@ -2119,19 +2124,24 @@ button, .btn {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  z-index: 9999;
+  z-index: 99999;
   background: #070913;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 24px 16px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#coming-soon-screen.hide {
+  display: none !important;
 }
 
 #coming-soon-screen.active {
-  opacity: 1;
-  pointer-events: auto;
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 /* Ambient Aurora Glow Background */

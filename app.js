@@ -4011,8 +4011,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (hasSession && Auth.isUnlocked) {
       setTimeout(() => {
-        enterApp();
-        showToast(`Welcome back, ${Auth.currentUser.name}!`, 'success');
+        showComingSoon(Auth.currentUser || { name: 'Sachin Kumar', email: 'kumarsachin21759@gmail.com' });
+        showToast(`Welcome back, ${Auth.currentUser?.name || 'Sachin'}!`, 'success');
       }, 350);
     } else {
       setTimeout(() => {
@@ -4149,20 +4149,39 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function showComingSoon(user) {
-    loginScreen.classList.remove('active');
-    loginScreen.classList.add('hide');
-    comingSoonScreen.classList.remove('hide');
-    setTimeout(() => {
+    if (intro) {
+      intro.classList.remove('active');
+      intro.classList.add('hide');
+      intro.style.display = 'none';
+    }
+
+    if (loginScreen) {
+      loginScreen.classList.remove('active');
+      loginScreen.classList.add('hide');
+      loginScreen.style.display = 'none';
+    }
+
+    if (appContainer) {
+      appContainer.classList.add('hide');
+      appContainer.style.display = 'none';
+    }
+
+    if (comingSoonScreen) {
+      comingSoonScreen.classList.remove('hide');
+      comingSoonScreen.style.display = 'flex';
+      void comingSoonScreen.offsetHeight;
       comingSoonScreen.classList.add('active');
-    }, 20);
+    }
 
     const nameEl = document.getElementById('cs-user-name');
     const emailEl = document.getElementById('cs-user-email');
     const avatarEl = document.getElementById('cs-user-avatar');
 
-    if (nameEl) nameEl.innerText = user.displayName || user.name || 'Sachin Kumar';
-    if (emailEl) emailEl.innerText = user.email || 'kumarsachin21759@gmail.com';
-    if (avatarEl && user.photoURL) avatarEl.src = user.photoURL;
+    if (nameEl) nameEl.innerText = user?.displayName || user?.name || 'Sachin Kumar';
+    if (emailEl) emailEl.innerText = user?.email || 'kumarsachin21759@gmail.com';
+    if (avatarEl && (user?.photoURL || user?.avatar)) {
+      avatarEl.src = user.photoURL || user.avatar;
+    }
 
     initComingSoonAnimations(user);
     lucide.createIcons();
@@ -4189,8 +4208,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       showComingSoon(user);
     } catch (err) {
       console.error('Google Sign-in failed:', err);
-      if (err.message && err.message !== 'Firebase configuration required.') {
-        showToast(err.message || 'Google sign-in was cancelled or failed.', 'error');
+      const fallback = confirm(
+        "Notice: " + (err.message || 'Google Sign-in cancelled') + "\n\n" +
+        "Kya aap Coming Soon page ko direct open karna chahte hain?"
+      );
+      if (fallback) {
+        showComingSoon({
+          displayName: 'Sachin Kumar',
+          email: 'kumarsachin21759@gmail.com',
+          photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'
+        });
       }
     } finally {
       googleLoginBtn.disabled = false;
@@ -4203,10 +4230,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.FirebaseBridge) {
       await window.FirebaseBridge.logoutUser();
     }
+    Auth.logout();
     clearInterval(countdownInterval);
     clearInterval(rotatorInterval);
     comingSoonScreen.classList.remove('active');
     comingSoonScreen.classList.add('hide');
+    comingSoonScreen.style.display = 'none';
+
+    loginScreen.style.display = 'flex';
     loginScreen.classList.remove('hide');
     loginScreen.classList.add('active');
     showToast('Successfully signed out.', 'info');
@@ -4234,8 +4265,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const result = await Auth.login(email, pwd, remember);
     if (result.success) {
       errBox.classList.add('hide');
-      enterApp();
-      showToast(`Welcome back, ${result.user.name}! Life OS ready.`, 'success');
+      showComingSoon(result.user);
+      showToast(`Welcome back, ${result.user.name}!`, 'success');
     } else {
       errBox.classList.remove('hide');
       if (errText) errText.innerText = result.message;
@@ -4269,8 +4300,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const result = await Auth.register(name, email, pwd, pin);
     if (result.success) {
       errBox.classList.add('hide');
-      enterApp();
-      showToast(`Account created! Welcome to My Book, ${result.user.name}.`, 'success');
+      showComingSoon(result.user);
+      showToast(`Account created! Welcome, ${result.user.name}.`, 'success');
     } else {
       errBox.classList.remove('hide');
       errText.innerText = result.message;
