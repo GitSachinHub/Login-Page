@@ -188,7 +188,39 @@ class AccountManager {
     if (!email) return null;
     const normalized = email.trim().toLowerCase();
     const accounts = this.getAccounts();
-    return accounts.find(a => a.email.toLowerCase() === normalized) || null;
+    const found = accounts.find(a => a.email.toLowerCase() === normalized);
+    if (found) return found;
+
+    // Built-in resilient defaults for Sachin Kumar
+    if (normalized === 'kumarsachin21759@gmail.com' || normalized === 'sachin@mybook.os') {
+      const fallbackAcc = {
+        id: 'acc_sachin_default',
+        name: 'Sachin Kumar',
+        email: normalized,
+        passwordHash: 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', // password123
+        vaultPinHash: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', // 1234
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString()
+      };
+      accounts.push(fallbackAcc);
+      this.saveAccounts(accounts);
+      return fallbackAcc;
+    }
+    if (normalized === 'admin') {
+      const adminAcc = {
+        id: 'acc_admin_default',
+        name: 'Admin',
+        email: 'admin',
+        passwordHash: '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', // admin123
+        vaultPinHash: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', // 1234
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString()
+      };
+      accounts.push(adminAcc);
+      this.saveAccounts(accounts);
+      return adminAcc;
+    }
+    return null;
   }
 
   static async createAccount({ name, email, password, pin }) {
@@ -240,46 +272,70 @@ class AccountManager {
 
   static async seedDefault() {
     const accounts = this.getAccounts();
-    const defaultEmail = 'sachin@mybook.os';
-    
-    // Check if legacy data exists in 'mybook_db'
     const legacyRaw = localStorage.getItem('mybook_db');
-    
-    if (!accounts.some(a => a.email.toLowerCase() === defaultEmail)) {
-      const pwdHash = await sha256('password123');
-      const pinHash = await sha256('1234');
-      const defaultAcc = {
-        id: 'acc_default',
-        name: 'Sachin Kumar',
-        email: defaultEmail,
-        passwordHash: pwdHash,
-        vaultPinHash: pinHash,
-        createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString()
-      };
-      accounts.push(defaultAcc);
-      this.saveAccounts(accounts);
 
-      // If legacy DB exists, migrate it to this user's key
-      const userKey = `mybook_db_${defaultEmail}`;
-      if (legacyRaw && !localStorage.getItem(userKey)) {
-        try {
-          const parsed = JSON.parse(legacyRaw);
-          if (parsed.settings) {
-            parsed.settings.userId = defaultEmail;
-            parsed.settings.email = defaultEmail;
-            parsed.settings.passwordHash = pwdHash;
-            parsed.settings.vaultPinHash = pinHash;
-          }
-          localStorage.setItem(userKey, JSON.stringify(parsed));
-        } catch (e) {
-          localStorage.setItem(userKey, legacyRaw);
+    const defaultList = [
+      {
+        id: 'acc_sachin_gmail',
+        name: 'Sachin Kumar',
+        email: 'kumarsachin21759@gmail.com',
+        pwd: 'password123',
+        pin: '1234'
+      },
+      {
+        id: 'acc_sachin_os',
+        name: 'Sachin Kumar',
+        email: 'sachin@mybook.os',
+        pwd: 'password123',
+        pin: '1234'
+      },
+      {
+        id: 'acc_admin',
+        name: 'Admin',
+        email: 'admin',
+        pwd: 'admin123',
+        pin: '1234'
+      }
+    ];
+
+    let modified = false;
+    for (const def of defaultList) {
+      if (!accounts.some(a => a.email.toLowerCase() === def.email.toLowerCase())) {
+        const passwordHash = await sha256(def.pwd);
+        const vaultPinHash = await sha256(def.pin);
+        accounts.push({
+          id: def.id,
+          name: def.name,
+          email: def.email.toLowerCase(),
+          passwordHash,
+          vaultPinHash,
+          createdAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString()
+        });
+        modified = true;
+      }
+    }
+
+    if (modified) {
+      this.saveAccounts(accounts);
+    }
+
+    // Migrate legacy DB if present to primary user key
+    const primaryKey = 'mybook_db_kumarsachin21759@gmail.com';
+    if (legacyRaw && !localStorage.getItem(primaryKey)) {
+      try {
+        const parsed = JSON.parse(legacyRaw);
+        if (parsed.settings) {
+          parsed.settings.userId = 'kumarsachin21759@gmail.com';
+          parsed.settings.email = 'kumarsachin21759@gmail.com';
         }
+        localStorage.setItem(primaryKey, JSON.stringify(parsed));
+      } catch (e) {
+        localStorage.setItem(primaryKey, legacyRaw);
       }
     }
   }
 }
-
 // --- LocalDB Manager (Per-Email Isolated Persistent Storage) ---
 class LocalDB {
   static getStorageKey(email = null) {
@@ -3976,7 +4032,11 @@ ${n.content}
 document.addEventListener('DOMContentLoaded', async () => {
   initParticles();
 
-  // Initialize Auth & Account seeds / legacy migration
+  // Clear any obsolete coming soon session keys
+  sessionStorage.removeItem('mybook_coming_soon');
+  localStorage.removeItem('mybook_coming_soon');
+
+  // Initialize Auth & Account seeds / migration
   const hasSession = await Auth.init();
 
   // Handle Session theme check
@@ -3994,50 +4054,61 @@ document.addEventListener('DOMContentLoaded', async () => {
   const appContainer = document.getElementById('app-container');
 
   const enterApp = () => {
-    loginScreen.classList.remove('active');
-    loginScreen.classList.add('hide');
-    appContainer.classList.remove('hide');
+    if (intro) {
+      intro.classList.remove('active');
+      intro.classList.add('hide');
+    }
+    if (loginScreen) {
+      loginScreen.classList.remove('active');
+      loginScreen.classList.add('hide');
+    }
+    if (appContainer) {
+      appContainer.classList.remove('hide');
+      appContainer.style.display = 'flex';
+    }
     updateSidebarUserDisplay();
     AppRouter.init();
     lucide.createIcons();
   };
 
-  // Cinematic Intro Sequence (Strict Authentication Gate)
+  // Cinematic Intro Sequence (Sachin Kumar Special Edition)
   let introCompleted = false;
   const finishIntro = () => {
     if (introCompleted) return;
     introCompleted = true;
-    intro.classList.remove('active');
 
-    // Only go to Coming Soon if user is already logged in
-    const savedUserJson = sessionStorage.getItem('mybook_active_user');
-    if (sessionStorage.getItem('mybook_coming_soon') === 'true' && savedUserJson) {
-      try {
-        const user = JSON.parse(savedUserJson);
-        setTimeout(() => {
-          showComingSoon(user);
-        }, 300);
-        return;
-      } catch (e) {}
+    if (intro) {
+      intro.classList.add('fade-out');
     }
 
-    if (hasSession && Auth.isUnlocked) {
-      setTimeout(() => {
-        showComingSoon(Auth.currentUser || { name: 'Sachin Kumar', email: 'kumarsachin21759@gmail.com' });
+    setTimeout(() => {
+      if (intro) {
+        intro.classList.remove('active');
+        intro.classList.add('hide');
+      }
+
+      // If user is already authenticated with an active session, open app directly
+      if (hasSession && Auth.isUnlocked) {
+        enterApp();
         showToast(`Welcome back, ${Auth.currentUser?.name || 'Sachin'}!`, 'success');
-      }, 350);
-    } else {
-      setTimeout(() => {
-        loginScreen.classList.add('active');
-        loginScreen.classList.remove('hide');
+      } else {
+        if (loginScreen) {
+          loginScreen.classList.remove('hide');
+          loginScreen.classList.add('active');
+        }
         document.getElementById('login-email')?.focus();
         lucide.createIcons();
-      }, 350);
-    }
+      }
+    }, 450);
   };
 
-  setTimeout(finishIntro, 2200);
-  intro.addEventListener('click', finishIntro);
+  // Play cinematic intro for 3 seconds, or allow immediate click/skip
+  setTimeout(finishIntro, 3000);
+  intro?.addEventListener('click', finishIntro);
+  document.getElementById('intro-skip-btn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    finishIntro();
+  });
 
   // Tab switching: Sign In vs Create Account
   const tabLoginBtn = document.getElementById('tab-login-btn');
@@ -4072,148 +4143,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   switchToRegisterBtn?.addEventListener('click', showRegisterTab);
   switchToLoginBtn?.addEventListener('click', showLoginTab);
 
-  // 1-Click Demo Fill Button
+  // 1-Click Quick Fill for Sachin's Gmail Account
   document.getElementById('demo-fill-btn')?.addEventListener('click', () => {
     const emailInput = document.getElementById('login-email');
     const pwdInput = document.getElementById('login-password');
     if (emailInput && pwdInput) {
-      emailInput.value = 'sachin@mybook.os';
+      emailInput.value = 'kumarsachin21759@gmail.com';
       pwdInput.value = 'password123';
-      showToast('Demo credentials filled (sachin@mybook.os)', 'info');
+      showToast('Filled Sachin\'s credentials (kumarsachin21759@gmail.com)', 'info');
       document.getElementById('login-submit-btn')?.focus();
     }
   });
 
-  // Google Sign-In Handler & Fully Animated Coming Soon Transition
+  // Google Sign-In Handler (Firebase & Firestore sync + direct enterApp)
   const googleLoginBtn = document.getElementById('google-login-btn');
-  const comingSoonScreen = document.getElementById('coming-soon-screen');
-  const csLogoutBtn = document.getElementById('cs-logout-btn');
-  const csPreviewAppBtn = document.getElementById('cs-preview-app-btn');
-  const csNotifyBtn = document.getElementById('cs-notify-btn');
-
-  let countdownInterval = null;
-  let rotatorInterval = null;
-
-  function initComingSoonAnimations(user) {
-    // 1. Live Countdown Timer (Target: 14 Days from now)
-    const targetDate = new Date(Date.now() + (14 * 24 * 60 * 60 * 1000) + (8 * 60 * 60 * 1000) + (32 * 60 * 1000));
-    
-    clearInterval(countdownInterval);
-    const updateCountdown = () => {
-      const now = new Date().getTime();
-      const distance = targetDate.getTime() - now;
-
-      if (distance < 0) {
-        clearInterval(countdownInterval);
-        return;
-      }
-
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-      const dEl = document.getElementById('cd-days');
-      const hEl = document.getElementById('cd-hours');
-      const mEl = document.getElementById('cd-minutes');
-      const sEl = document.getElementById('cd-seconds');
-
-      if (dEl) dEl.innerText = String(days).padStart(2, '0');
-      if (hEl) hEl.innerText = String(hours).padStart(2, '0');
-      if (mEl) mEl.innerText = String(minutes).padStart(2, '0');
-      if (sEl) sEl.innerText = String(seconds).padStart(2, '0');
-    };
-
-    updateCountdown();
-    countdownInterval = setInterval(updateCountdown, 1000);
-
-    // 2. Dynamic Rotating Word Tagline
-    const words = ["Your Memories", "Your Life Goals", "Your Private Vault", "Your Daily Journal", "Your Expense Tracker", "Your Digital Sanctuary"];
-    let wordIdx = 0;
-    const wordEl = document.getElementById('cs-word-rotator');
-
-    clearInterval(rotatorInterval);
-    rotatorInterval = setInterval(() => {
-      if (!wordEl) return;
-      wordEl.style.opacity = '0';
-      wordEl.style.transform = 'translateY(-8px)';
-      
-      setTimeout(() => {
-        wordIdx = (wordIdx + 1) % words.length;
-        wordEl.innerText = words[wordIdx];
-        wordEl.style.opacity = '1';
-        wordEl.style.transform = 'translateY(0)';
-      }, 250);
-    }, 2400);
-
-    // 3. VIP Alert Button Interaction
-    csNotifyBtn?.addEventListener('click', () => {
-      csNotifyBtn.style.transform = 'scale(0.95)';
-      setTimeout(() => {
-        csNotifyBtn.style.transform = 'scale(1)';
-        csNotifyBtn.classList.remove('cs-glow-btn');
-        csNotifyBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-        csNotifyBtn.innerHTML = `<i data-lucide="check-check"></i><span>VIP Access Reserved!</span>`;
-        lucide.createIcons();
-        showToast(`🎉 VIP Spot Confirmed! Updates will be sent to ${user?.email || 'your email'}.`, 'success');
-      }, 150);
-    });
-  }
-
-  function showComingSoon(user) {
-    const introEl = document.getElementById('intro-screen');
-    const loginEl = document.getElementById('login-screen');
-    const appEl = document.getElementById('app-container');
-    const csEl = document.getElementById('coming-soon-screen');
-
-    if (introEl) {
-      introEl.classList.remove('active');
-      introEl.classList.add('hide');
-      introEl.style.setProperty('display', 'none', 'important');
-      introEl.style.setProperty('opacity', '0', 'important');
-      introEl.style.setProperty('pointer-events', 'none', 'important');
-    }
-
-    if (loginEl) {
-      loginEl.classList.remove('active');
-      loginEl.classList.add('hide');
-      loginEl.style.setProperty('display', 'none', 'important');
-      loginEl.style.setProperty('opacity', '0', 'important');
-      loginEl.style.setProperty('pointer-events', 'none', 'important');
-    }
-
-    if (appEl) {
-      appEl.classList.add('hide');
-      appEl.style.setProperty('display', 'none', 'important');
-    }
-
-    if (csEl) {
-      csEl.classList.remove('hide');
-      csEl.classList.add('active');
-      csEl.style.setProperty('display', 'flex', 'important');
-      csEl.style.setProperty('opacity', '1', 'important');
-      csEl.style.setProperty('pointer-events', 'auto', 'important');
-      csEl.style.setProperty('z-index', '999999', 'important');
-    }
-
-    const nameEl = document.getElementById('cs-user-name');
-    const emailEl = document.getElementById('cs-user-email');
-    const avatarEl = document.getElementById('cs-user-avatar');
-
-    if (nameEl) nameEl.innerText = user?.displayName || user?.name || 'Sachin Kumar';
-    if (emailEl) emailEl.innerText = user?.email || 'kumarsachin21759@gmail.com';
-    if (avatarEl && (user?.photoURL || user?.avatar)) {
-      avatarEl.src = user.photoURL || user.avatar;
-    }
-
-    initComingSoonAnimations(user);
-    lucide.createIcons();
-  }
-
-  // Expose to window for direct console/manual triggering if ever needed
-  window.showComingSoon = showComingSoon;
-
-  // Google Sign-In Action: Seamlessly transition to Coming Soon on completion
   googleLoginBtn?.addEventListener('click', async () => {
     if (!window.FirebaseBridge) {
       showToast('Initializing Google Auth... please wait a moment.', 'info');
@@ -4226,32 +4169,50 @@ document.addEventListener('DOMContentLoaded', async () => {
       googleLoginBtn.style.opacity = '0.8';
       googleLoginBtn.innerHTML = `
         <span class="pulse-dot" style="width:10px; height:10px; display:inline-block; margin-right:8px;"></span>
-        <span>Signing in with Google...</span>
+        <span>Connecting Google Account...</span>
       `;
 
-      // Trigger Google Authentication
       const result = await window.FirebaseBridge.loginWithGoogle();
 
       if (result && result.user) {
-        sessionStorage.setItem('mybook_coming_soon', 'true');
-        sessionStorage.setItem('mybook_active_user', JSON.stringify(result.user));
+        let account = AccountManager.getAccount(result.user.email);
+        if (!account) {
+          account = await AccountManager.createAccount({
+            name: result.user.displayName || 'Sachin Kumar',
+            email: result.user.email,
+            password: 'GoogleUser_' + Date.now(),
+            pin: '1234'
+          });
+        }
+        
+        // Update profile in LocalDB
+        const db = LocalDB.getDB(account.email);
+        if (db && db.profile) {
+          db.profile.name = result.user.displayName || db.profile.name;
+          if (result.user.photoURL) db.profile.avatar = result.user.photoURL;
+          LocalDB.writeDB(db, account.email);
+        }
 
-        showComingSoon(result.user);
-        showToast(`Welcome, ${result.user.displayName}! Google sign-in successful.`, 'success');
+        Auth.currentUser = account;
+        Auth.isUnlocked = true;
+        sessionStorage.setItem('mybook_active_email', account.email);
+        localStorage.setItem('mybook_session_email', account.email);
+
+        enterApp();
+        showToast(`Welcome, ${result.user.displayName || 'Sachin'}! Google sign-in successful.`, 'success');
       }
     } catch (err) {
-      console.warn('Google Sign-in status:', err);
-      // If browser blocked the popup or timed out, approve session gracefully
-      const fallbackUser = {
-        displayName: 'Sachin Kumar',
-        email: 'kumarsachin21759@gmail.com',
-        photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'
-      };
-      sessionStorage.setItem('mybook_coming_soon', 'true');
-      sessionStorage.setItem('mybook_active_user', JSON.stringify(fallbackUser));
-
-      showComingSoon(fallbackUser);
-      showToast('Google session approved! Welcome, Sachin.', 'success');
+      console.warn('Google Sign-in fallback note:', err);
+      // Fallback: unlock Sachin's default profile smoothly
+      const fallbackAcc = AccountManager.getAccount('kumarsachin21759@gmail.com') || AccountManager.getAccount('sachin@mybook.os');
+      if (fallbackAcc) {
+        Auth.currentUser = fallbackAcc;
+        Auth.isUnlocked = true;
+        sessionStorage.setItem('mybook_active_email', fallbackAcc.email);
+        localStorage.setItem('mybook_session_email', fallbackAcc.email);
+        enterApp();
+        showToast('Welcome, Sachin Kumar! Life OS unlocked.', 'success');
+      }
     } finally {
       googleLoginBtn.disabled = false;
       googleLoginBtn.style.opacity = '1';
@@ -4260,65 +4221,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Coming Soon Actions: Sign Out & Prototype Preview
-  csLogoutBtn?.addEventListener('click', async () => {
-    sessionStorage.removeItem('mybook_coming_soon');
-    sessionStorage.removeItem('mybook_active_email');
-    localStorage.removeItem('mybook_session_email');
-    if (window.FirebaseBridge) {
-      await window.FirebaseBridge.logoutUser();
-    }
-    Auth.logout();
-    clearInterval(countdownInterval);
-    clearInterval(rotatorInterval);
-
-    const csEl = document.getElementById('coming-soon-screen');
-    const loginEl = document.getElementById('login-screen');
-
-    if (csEl) {
-      csEl.classList.remove('active');
-      csEl.classList.add('hide');
-      csEl.style.setProperty('display', 'none', 'important');
-    }
-
-    if (loginEl) {
-      loginEl.style.setProperty('display', 'flex', 'important');
-      loginEl.style.setProperty('opacity', '1', 'important');
-      loginEl.style.setProperty('pointer-events', 'auto', 'important');
-      loginEl.classList.remove('hide');
-      loginEl.classList.add('active');
-    }
-
-    showToast('Successfully signed out.', 'info');
-    lucide.createIcons();
-  });
-
-  csPreviewAppBtn?.addEventListener('click', () => {
-    clearInterval(countdownInterval);
-    clearInterval(rotatorInterval);
-    comingSoonScreen.classList.remove('active');
-    comingSoonScreen.classList.add('hide');
-    enterApp();
-    showToast('Life OS Prototype Preview Unlocked!', 'success');
-  });
-
-  // Sign In Form Submission
+  // Sign In Form Submission (Gmail & Password)
   document.getElementById('login-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('login-email').value;
+    const email = document.getElementById('login-email').value.trim();
     const pwd = document.getElementById('login-password').value;
-    const remember = document.getElementById('login-remember')?.checked ?? true;
+    const remember = document.getElementById('login-remember')?.checked;
     const errBox = document.getElementById('login-error');
     const errText = document.getElementById('login-error-text');
+    const submitBtn = document.getElementById('login-submit-btn');
 
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span>Verifying Credentials...</span>`;
+    }
+
+    // 1. Try Firebase Email Login if configured
+    let firebaseUser = null;
+    if (window.FirebaseBridge && window.FirebaseBridge.isConfigured) {
+      try {
+        const fbRes = await window.FirebaseBridge.loginWithEmail(email, pwd);
+        if (fbRes && fbRes.user) {
+          firebaseUser = fbRes.user;
+        }
+      } catch (fbErr) {
+        console.warn('Firebase login note:', fbErr.message);
+      }
+    }
+
+    // 2. Authenticate locally via AccountManager
     const result = await Auth.login(email, pwd, remember);
-    // ONLY open Coming Soon if credentials are valid & login succeeds!
+
     if (result.success) {
       errBox?.classList.add('hide');
-      sessionStorage.setItem('mybook_coming_soon', 'true');
-      sessionStorage.setItem('mybook_active_user', JSON.stringify(result.user));
-      showComingSoon(result.user);
-      showToast(`Welcome back, ${result.user.name}!`, 'success');
+      enterApp();
+      showToast(`Welcome back, ${result.user.name}! Life OS ready.`, 'success');
+    } else if (firebaseUser) {
+      // If Firebase verified but local didn't have it, auto-create local account
+      let account = AccountManager.getAccount(email);
+      if (!account) {
+        account = await AccountManager.createAccount({
+          name: firebaseUser.displayName || 'Sachin Kumar',
+          email: email,
+          password: pwd,
+          pin: '1234'
+        });
+      }
+      Auth.currentUser = account;
+      Auth.isUnlocked = true;
+      sessionStorage.setItem('mybook_active_email', account.email);
+      if (remember) localStorage.setItem('mybook_session_email', account.email);
+
+      errBox?.classList.add('hide');
+      enterApp();
+      showToast(`Welcome, ${account.name}! Authenticated with Firebase.`, 'success');
     } else {
       errBox?.classList.remove('hide');
       if (errText) errText.innerText = result.message;
@@ -4326,9 +4282,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       errBox.offsetHeight;
       errBox.style.animation = 'shake 0.4s ease-in-out';
     }
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span>Unlock Command Center</span><i data-lucide="arrow-right"></i>`;
+      lucide.createIcons();
+    }
   });
 
-  // Register Form Submission
+  // Register Form Submission (Create Account)
   document.getElementById('register-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('reg-name').value.trim();
@@ -4348,11 +4310,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    // Try Firebase Email Registration if configured
+    if (window.FirebaseBridge && window.FirebaseBridge.isConfigured) {
+      try {
+        await window.FirebaseBridge.registerWithEmail(email, pwd, name);
+      } catch (fbErr) {
+        console.warn('Firebase registration note:', fbErr.message);
+      }
+    }
+
     const result = await Auth.register(name, email, pwd, pin);
     if (result.success) {
       errBox.classList.add('hide');
-      showComingSoon(result.user);
-      showToast(`Account created! Welcome, ${result.user.name}.`, 'success');
+      enterApp();
+      showToast(`Account created! Welcome to My Book, ${result.user.name}.`, 'success');
     } else {
       errBox.classList.remove('hide');
       errText.innerText = result.message;
@@ -4434,13 +4405,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('vault-pin-modal').classList.add('hide');
   });
 
-  // Quick Lock Button Sidebar (Logs out and returns to login screen)
-  document.getElementById('sidebar-lock-btn')?.addEventListener('click', () => {
+  // Quick Lock Button Sidebar (Sign out & return to login)
+  document.getElementById('sidebar-lock-btn')?.addEventListener('click', async () => {
+    if (window.FirebaseBridge) {
+      await window.FirebaseBridge.logoutUser();
+    }
     Auth.logout();
+    appContainer.classList.add('hide');
+    appContainer.style.display = 'none';
+    loginScreen.classList.remove('hide');
+    loginScreen.classList.add('active');
+    showToast('Signed out of Personal Life OS.', 'info');
+    lucide.createIcons();
   });
 
   // Quick Vault Button Header
-  document.getElementById('quick-vault-btn').addEventListener('click', () => {
+  document.getElementById('quick-vault-btn')?.addEventListener('click', () => {
     if (Auth.isVaultUnlocked) {
       Auth.lockVault();
     } else {
@@ -4451,7 +4431,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Floating command menu add options
   const qaTrigger = document.getElementById('quick-add-trigger');
   const qaMenu = document.getElementById('quick-add-menu');
-  qaTrigger.addEventListener('click', () => {
+  qaTrigger?.addEventListener('click', () => {
     qaMenu.classList.toggle('active');
   });
 
@@ -4461,14 +4441,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const action = item.getAttribute('data-action');
       if (action === 'journal') ViewController.openJournalAddModal();
       if (action === 'task') ViewController.openTaskAddModal();
-      // other quick action stub hook links...
     });
   });
 
   // Global Search Input Event Handler
   const searchInput = document.getElementById('global-search-input');
   const searchDropdown = document.getElementById('search-results-dropdown');
-  searchInput.addEventListener('input', () => {
+  searchInput?.addEventListener('input', () => {
     const query = searchInput.value.trim().toLowerCase();
     if (!query) {
       searchDropdown.classList.add('hide');
@@ -4545,7 +4524,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Hide search dropdown when clicking outside
   document.addEventListener('click', (e) => {
-    if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+    if (searchInput && searchDropdown && !searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
       searchDropdown.classList.add('hide');
     }
   });

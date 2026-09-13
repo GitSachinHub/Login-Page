@@ -3,41 +3,89 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Book — Personal Life OS</title>
+  <title>Sachin Kumar — My Book (Personal Life OS)</title>
   <!-- Google Fonts: Outfit (modern sans) & Playfair Display (serif for autobiography feel) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,700;1,400&display=swap" rel="stylesheet">
-  <!-- Lucide Icons for clean look -->
+  <!-- Lucide Icons for clean modern look -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="styles.css?v=3">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 
   <!-- Particle Background Canvas -->
   <canvas id="particle-canvas"></canvas>
 
-  <!-- Cinematic Intro Overlay -->
+  <!-- Cinematic Intro Overlay for Sachin Kumar -->
   <div id="intro-screen" class="overlay-screen active">
+    <!-- Ambient Aurora Glow Behind Intro -->
+    <div class="intro-ambient-aurora">
+      <div class="aurora-light light-1"></div>
+      <div class="aurora-light light-2"></div>
+      <div class="aurora-light light-3"></div>
+    </div>
+
     <div class="intro-content">
-      <h1 class="intro-title">MY BOOK</h1>
-      <p class="intro-tagline">“Your Life. Your Story.”</p>
-      <div class="intro-divider">
-        <div class="light-sweep"></div>
+      <!-- Status Badge -->
+      <div class="intro-badge-pill">
+        <span class="intro-pulsing-node"></span>
+        <span>PERSONAL LIFE ARCHIVE • SYSTEM OS</span>
+      </div>
+
+      <!-- Monogram Shield with Rotating Rings -->
+      <div class="intro-monogram-shield">
+        <div class="intro-shield-ring ring-outer"></div>
+        <div class="intro-shield-ring ring-inner"></div>
+        <div class="intro-shield-glow"></div>
+        <div class="intro-shield-text">SK</div>
+      </div>
+
+      <!-- Main Cinematic Title -->
+      <h1 class="intro-cinematic-title">
+        <span class="intro-owner-name">SACHIN KUMAR</span>
+        <span class="intro-book-label">MY BOOK • PERSONAL LIFE OS</span>
+      </h1>
+
+      <!-- Tagline -->
+      <p class="intro-tagline">“Your Life. Your Memories. Your Journey. Your Legacy.”</p>
+
+      <!-- Shimmering Light Divider -->
+      <div class="intro-divider-wrap">
+        <div class="intro-divider-track">
+          <div class="intro-divider-glow"></div>
+        </div>
+      </div>
+
+      <!-- Telemetry Progress Bar & Skip Action -->
+      <div class="intro-telemetry">
+        <div class="intro-loading-track">
+          <div class="intro-loading-fill"></div>
+        </div>
+        <div class="intro-telemetry-row">
+          <div class="intro-telemetry-status">
+            <span class="telemetry-dot"></span>
+            <span id="intro-telemetry-text">Unlocking Personal Command Center...</span>
+          </div>
+          <button type="button" id="intro-skip-btn" class="intro-skip-action" title="Enter Command Center immediately">
+            <span>Enter Now</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Login/Auth Screen -->
-  <div id="login-screen" class="overlay-screen">
+  <div id="login-screen" class="overlay-screen hide">
     <div class="login-card glass-panel">
       <div class="login-header">
         <div class="login-logo">
-          <i data-lucide="book-open"></i>
+          <i data-lucide="shield-check"></i>
         </div>
         <h2>MY BOOK</h2>
-        <p>Personal Life OS & Digital Sanctuary 🔐</p>
+        <p>Personal Life OS for Sachin Kumar 🔐</p>
       </div>
 
       <!-- Segmented Tab Switcher -->
@@ -54,22 +102,22 @@
 
       <!-- Sign In Section -->
       <div id="auth-login-panel">
-        <!-- 1-Click Demo Box -->
+        <!-- 1-Click Quick Fill for Sachin's Gmail -->
         <div class="demo-quick-box">
           <div class="demo-quick-info">
-            <strong><i data-lucide="sparkles"></i> Demo Account Available</strong>
-            <span>sachin@mybook.os • password123</span>
+            <strong><i data-lucide="sparkles"></i> Quick Login (Sachin's Gmail)</strong>
+            <span>kumarsachin21759@gmail.com • password123</span>
           </div>
-          <button type="button" id="demo-fill-btn" class="demo-fill-btn">Fill Demo</button>
+          <button type="button" id="demo-fill-btn" class="demo-fill-btn">⚡ Fill Gmail</button>
         </div>
 
         <!-- Saved Accounts Selector -->
         <div id="saved-accounts-box" class="saved-accounts-container hide">
-          <div class="saved-accounts-title">Switch to saved user:</div>
+          <div class="saved-accounts-title">Switch to saved account:</div>
           <div id="saved-accounts-list" class="saved-accounts-list"></div>
         </div>
 
-        <!-- Google Sign-In Action -->
+        <!-- Google Sign-In Action (Connected with Firebase) -->
         <div class="google-auth-container">
           <button type="button" id="google-login-btn" class="google-btn">
             <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
@@ -82,17 +130,17 @@
           </button>
           <div class="auth-divider">
             <span class="divider-line"></span>
-            <span class="divider-text">or sign in with email</span>
+            <span class="divider-text">or sign in with Gmail & password</span>
             <span class="divider-line"></span>
           </div>
         </div>
 
         <form id="login-form">
           <div class="form-group">
-            <label for="login-email">Email Address</label>
+            <label for="login-email">Gmail / Email Address</label>
             <div class="input-wrapper">
               <i data-lucide="mail"></i>
-              <input type="email" id="login-email" placeholder="name@example.com" required autocomplete="email">
+              <input type="email" id="login-email" placeholder="kumarsachin21759@gmail.com" required autocomplete="email">
             </div>
           </div>
           <div class="form-group">
@@ -120,7 +168,7 @@
           </div>
 
           <button type="submit" class="primary-btn login-btn" id="login-submit-btn">
-            <span>Unlock Life OS</span>
+            <span>Unlock Command Center</span>
             <i data-lucide="arrow-right"></i>
           </button>
         </form>
@@ -143,10 +191,10 @@
           </div>
 
           <div class="form-group">
-            <label for="reg-email">Email Address</label>
+            <label for="reg-email">Gmail / Email Address</label>
             <div class="input-wrapper">
               <i data-lucide="mail"></i>
-              <input type="email" id="reg-email" placeholder="name@domain.com" required autocomplete="email">
+              <input type="email" id="reg-email" placeholder="e.g. kumarsachin21759@gmail.com" required autocomplete="email">
             </div>
           </div>
 
@@ -190,29 +238,25 @@
 
           <div id="register-error" class="auth-error-box hide">
             <i data-lucide="alert-circle"></i>
-            <span id="register-error-text">Please ensure all fields are filled properly.</span>
+            <span id="register-error-text">Please fill out all required fields properly.</span>
           </div>
 
-          <button type="submit" class="primary-btn login-btn" id="register-submit-btn">
-            <span>Initialize Life OS Account</span>
-            <i data-lucide="sparkles"></i>
+          <button type="submit" class="primary-btn login-btn">
+            <span>Create Account & Unlock OS</span>
+            <i data-lucide="arrow-right"></i>
           </button>
         </form>
 
         <div class="auth-switch-link">
-          <span>Already registered?</span>
-          <button type="button" id="switch-to-login-btn">Sign In to your account</button>
+          <span>Already have an account?</span>
+          <button type="button" id="switch-to-login-btn">Sign in here</button>
         </div>
-      </div>
-
-      <div class="login-footer">
-        <span class="security-badge"><i data-lucide="shield-check"></i> SHA-256 Encrypted & Local Isolation</span>
       </div>
     </div>
   </div>
 
-  <!-- Private Vault PIN Access Modal -->
-  <div id="vault-pin-modal" class="modal-overlay hide">
+  <!-- Vault PIN Modal (For sensitive sections: Vault & Finances) -->
+  <div id="vault-pin-modal" class="overlay-screen hide">
     <div class="modal-content vault-pin-card glass-panel">
       <div class="modal-header">
         <i data-lucide="shield-alert" class="vault-alert-icon"></i>
@@ -232,159 +276,7 @@
     </div>
   </div>
 
-  <!-- Post-Login "Coming Soon" Landing Screen (Fully Animated) -->
-  <div id="coming-soon-screen" class="overlay-screen hide">
-    <!-- Animated Nebula and Particle Aurora Glow -->
-    <div class="cs-aurora-bg">
-      <div class="aurora-blob aurora-1"></div>
-      <div class="aurora-blob aurora-2"></div>
-      <div class="aurora-blob aurora-3"></div>
-      <div class="cs-grid-overlay"></div>
-    </div>
-
-    <!-- Main Container Wrapper -->
-    <div class="coming-soon-wrapper">
-      
-      <!-- Top Navigation Header -->
-      <header class="cs-top-bar glass-panel">
-        <div class="cs-brand">
-          <div class="cs-brand-icon">
-            <i data-lucide="book-open"></i>
-          </div>
-          <div class="cs-brand-name">
-            <h3>MY BOOK</h3>
-            <span>Personal Life OS</span>
-          </div>
-        </div>
-
-        <div class="cs-user-pill" id="cs-user-pill">
-          <div class="cs-avatar-ring">
-            <img id="cs-user-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80" alt="Avatar" class="cs-avatar" />
-            <span class="cs-online-dot"></span>
-          </div>
-          <div class="cs-user-info">
-            <h4 id="cs-user-name">Sachin Kumar</h4>
-            <span id="cs-user-email">kumarsachin21759@gmail.com</span>
-          </div>
-          <button type="button" id="cs-logout-btn" class="cs-signout-icon-btn" title="Sign Out">
-            <i data-lucide="log-out"></i>
-          </button>
-        </div>
-      </header>
-
-      <!-- Main Hero Showcase Section -->
-      <div class="cs-hero-section">
-        
-        <div class="cs-hero-badge">
-          <span class="cs-ping-dot"></span>
-          <span class="cs-badge-text">SYSTEM V1.0 • CRAFTING IN PROGRESS</span>
-        </div>
-
-        <h1 class="cs-headline">
-          The Future of Your <br/>
-          <span class="cs-animated-gradient">Personal Sanctuary</span>
-        </h1>
-
-        <p class="cs-rotating-tagline">
-          Everything you love, documented in one place: 
-          <span id="cs-word-rotator" class="cs-dynamic-word">Your Memories</span>
-        </p>
-
-        <!-- Live Animated Countdown Timer -->
-        <div class="cs-countdown-container">
-          <div class="cs-countdown-box">
-            <div class="cs-countdown-num" id="cd-days">14</div>
-            <div class="cs-countdown-lbl">Days</div>
-          </div>
-          <span class="cs-cd-sep">:</span>
-          <div class="cs-countdown-box">
-            <div class="cs-countdown-num" id="cd-hours">08</div>
-            <div class="cs-countdown-lbl">Hours</div>
-          </div>
-          <span class="cs-cd-sep">:</span>
-          <div class="cs-countdown-box">
-            <div class="cs-countdown-num" id="cd-minutes">32</div>
-            <div class="cs-countdown-lbl">Minutes</div>
-          </div>
-          <span class="cs-cd-sep">:</span>
-          <div class="cs-countdown-box highlight">
-            <div class="cs-countdown-num" id="cd-seconds">45</div>
-            <div class="cs-countdown-lbl">Seconds</div>
-          </div>
-        </div>
-
-        <!-- Launch Progress Bar -->
-        <div class="cs-progress-container">
-          <div class="cs-progress-header">
-            <span><span><i data-lucide="sparkles" style="width:14px; height:14px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> Alpha Development Milestone</span></span>
-            <span class="cs-progress-percent">88% Complete</span>
-          </div>
-          <div class="cs-progress-track">
-            <div class="cs-progress-fill" style="width: 88%;">
-              <span class="cs-progress-shine"></span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Feature Spotlight Cards -->
-        <div class="cs-feature-cards-row">
-          <div class="cs-card">
-            <div class="cs-card-icon-glow purple">
-              <i data-lucide="shield-check"></i>
-            </div>
-            <h4>Private Vault</h4>
-            <p>End-to-end PIN encryption for confidential docs & financials.</p>
-          </div>
-
-          <div class="cs-card">
-            <div class="cs-card-icon-glow cyan">
-              <i data-lucide="bot"></i>
-            </div>
-            <h4>AI Life Copilot</h4>
-            <p>Query your life notes, habits & memories with AI intelligence.</p>
-          </div>
-
-          <div class="cs-card">
-            <div class="cs-card-icon-glow gold">
-              <i data-lucide="line-chart"></i>
-            </div>
-            <h4>Life Analytics</h4>
-            <p>Interactive timeline charts for mood, wealth tracking & habits.</p>
-          </div>
-
-          <div class="cs-card">
-            <div class="cs-card-icon-glow green">
-              <i data-lucide="database"></i>
-            </div>
-            <h4>Firestore Sync</h4>
-            <p>Google authenticated profile & cloud data saved in realtime.</p>
-          </div>
-        </div>
-
-        <!-- Interactive Action Buttons -->
-        <div class="cs-actions-container">
-          <button type="button" id="cs-notify-btn" class="primary-btn cs-action-btn cs-glow-btn">
-            <i data-lucide="bell-ring"></i>
-            <span>Get VIP Launch Alert</span>
-          </button>
-          
-          <button type="button" id="cs-preview-app-btn" class="secondary-btn cs-action-btn">
-            <i data-lucide="compass"></i>
-            <span>Explore Life OS Prototype</span>
-          </button>
-        </div>
-
-      </div>
-
-      <!-- Footer note -->
-      <footer class="cs-footer">
-        <p>Crafted with precision for <strong>Sachin Kumar</strong> • Secured by Google Firebase</p>
-      </footer>
-
-    </div>
-  </div>
-
-  <!-- Main Life OS Workspace Container -->
+<!-- Main Life OS Workspace Container -->
   <div id="app-container" class="hide">
     
     <!-- Sidebar Navigation -->

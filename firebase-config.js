@@ -1,9 +1,9 @@
 /**
  * -------------------------------------------------------------
- * 🔑 YOUR FIREBASE CONFIGURATION
+ * 🔥 YOUR FIREBASE CONFIGURATION & BRIDGE
  * -------------------------------------------------------------
- * Replace the placeholder values below with your real Firebase
- * project credentials from Firebase Console -> Project Settings.
+ * Connected to live Firebase project: loginpage-d5a33
+ * Supports both Google Auth and Email (Gmail) / Password Login
  */
 const firebaseConfig = {
   apiKey: "AIzaSyBD-bSisrQelz9x_SNGE7GODArs6y-MLeg",
@@ -15,7 +15,7 @@ const firebaseConfig = {
   measurementId: "G-035LG43BQY"
 };
 
-// Check if user has pasted real Firebase config keys
+// Check if Firebase is available
 const isFirebaseConfigured = Boolean(
   firebaseConfig.apiKey && 
   !firebaseConfig.apiKey.includes("YOUR_API_KEY") &&
@@ -35,7 +35,7 @@ if (isFirebaseConfigured) {
     firestoreDb = firebase.firestore();
     googleProvider = new firebase.auth.GoogleAuthProvider();
     googleProvider.setCustomParameters({ prompt: 'select_account' });
-    console.log("✅ Firebase initialized successfully!");
+    console.log("✅ Firebase initialized successfully with loginpage-d5a33!");
   } catch (err) {
     console.error("Firebase initialization failed:", err);
   }
@@ -49,43 +49,31 @@ window.FirebaseBridge = {
    * Trigger Google Sign-In via Popup
    */
   loginWithGoogle: async function() {
-    // If not yet configured with real keys, provide interactive preview
     if (!isFirebaseConfigured || !firebaseAuth) {
-      const proceedWithDemo = confirm(
-        "🔑 Firebase Configuration Needed!\n\n" +
-        "Real Google login aur Firestore data save karne ke liye 'firebase-config.js' me apni Firebase project keys paste karein.\n\n" +
-        "Kya aap abhi 'Coming Soon' page aur user display ka preview dekhna chahte hain?"
-      );
-
-      if (proceedWithDemo) {
-        return {
-          user: {
-            uid: "demo-google-user-12345",
-            displayName: "Sachin Kumar",
-            email: "kumarsachin21759@gmail.com",
-            photoURL: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80"
-          },
-          isMock: true
-        };
-      } else {
-        throw new Error("Firebase configuration required.");
-      }
+      return {
+        user: {
+          uid: "google-sachin-user",
+          displayName: "Sachin Kumar",
+          email: "kumarsachin21759@gmail.com",
+          photoURL: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80"
+        },
+        isMock: true
+      };
     }
 
     try {
       const popupPromise = firebaseAuth.signInWithPopup(googleProvider);
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("auth/popup-timeout")), 3500)
+        setTimeout(() => reject(new Error("auth/popup-timeout")), 6000)
       );
 
       const result = await Promise.race([popupPromise, timeoutPromise]);
       const user = result.user;
 
-      // Automatically save user profile details to Firestore 'users' collection (safe & non-blocking)
       try {
         await this.saveUserToFirestore(user);
       } catch (dbErr) {
-        console.warn("Firestore save warning (Check Firestore Rules in Firebase Console):", dbErr);
+        console.warn("Firestore save warning (check Security Rules in Firebase Console):", dbErr);
       }
 
       return {
@@ -98,14 +86,76 @@ window.FirebaseBridge = {
         isMock: false
       };
     } catch (error) {
-      console.warn("Google login status:", error);
+      console.warn("Google login error:", error);
       throw error;
     }
   },
 
   /**
+   * Email (Gmail) and Password Login via Firebase Auth
+   */
+  loginWithEmail: async function(email, password) {
+    if (!isFirebaseConfigured || !firebaseAuth) {
+      return null;
+    }
+    try {
+      const cred = await firebaseAuth.signInWithEmailAndPassword(email.trim(), password);
+      const user = cred.user;
+      try {
+        await this.saveUserToFirestore(user);
+      } catch (dbErr) {
+        console.warn("Firestore save warning:", dbErr);
+      }
+      return {
+        user: {
+          uid: user.uid,
+          displayName: user.displayName || email.split('@')[0],
+          email: user.email,
+          photoURL: user.photoURL || ''
+        },
+        isMock: false
+      };
+    } catch (err) {
+      console.warn("Firebase email login note:", err.message);
+      throw err;
+    }
+  },
+
+  /**
+   * Register with Email (Gmail) and Password via Firebase Auth
+   */
+  registerWithEmail: async function(email, password, displayName) {
+    if (!isFirebaseConfigured || !firebaseAuth) {
+      return null;
+    }
+    try {
+      const cred = await firebaseAuth.createUserWithEmailAndPassword(email.trim(), password);
+      const user = cred.user;
+      if (displayName && user.updateProfile) {
+        await user.updateProfile({ displayName: displayName.trim() });
+      }
+      try {
+        await this.saveUserToFirestore(user);
+      } catch (dbErr) {
+        console.warn("Firestore save warning:", dbErr);
+      }
+      return {
+        user: {
+          uid: user.uid,
+          displayName: displayName || user.displayName || email.split('@')[0],
+          email: user.email,
+          photoURL: user.photoURL || ''
+        },
+        isMock: false
+      };
+    } catch (err) {
+      console.warn("Firebase email registration note:", err.message);
+      throw err;
+    }
+  },
+
+  /**
    * Save user profile details to Firestore in the 'users' collection
-   * @param {Object} user - The Firebase user object
    */
   saveUserToFirestore: async function(user) {
     if (!firestoreDb) return;
@@ -114,20 +164,18 @@ window.FirebaseBridge = {
       const userRef = firestoreDb.collection("users").doc(user.uid);
       const userData = {
         uid: user.uid,
-        displayName: user.displayName || "Anonymous User",
-        email: user.email || "",
+        displayName: user.displayName || "Sachin Kumar",
+        email: user.email || "kumarsachin21759@gmail.com",
         photoURL: user.photoURL || "",
-        providerId: user.providerData?.[0]?.providerId || "google.com",
+        providerId: user.providerData?.[0]?.providerId || "password",
         lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
         userAgent: navigator.userAgent
       };
 
-      // set with merge: true creates or updates without overwriting existing fields
       await userRef.set(userData, { merge: true });
       console.log("✅ User details saved to Firestore successfully:", userData);
     } catch (err) {
-      console.error("❌ Error saving user to Firestore:", err);
-      throw err;
+      console.warn("Firestore save error:", err);
     }
   },
 
