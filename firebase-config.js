@@ -6,12 +6,13 @@
  * project credentials from Firebase Console -> Project Settings.
  */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBD-bSisrQelz9x_SNGE7GODArs6y-MLeg",
+  authDomain: "loginpage-d5a33.firebaseapp.com",
+  projectId: "loginpage-d5a33",
+  storageBucket: "loginpage-d5a33.firebasestorage.app",
+  messagingSenderId: "643663798223",
+  appId: "1:643663798223:web:ac1b3e27a6eaa2fa48bcba",
+  measurementId: "G-035LG43BQY"
 };
 
 // Check if user has pasted real Firebase config keys
@@ -89,6 +90,13 @@ window.FirebaseBridge = {
       };
     } catch (error) {
       console.error("Google login error:", error);
+      if (error.code === 'auth/operation-not-supported-in-this-environment' || window.location.protocol === 'file:') {
+        alert(
+          "⚠️ Google OAuth Policy Notice:\n\n" +
+          "Google Sign-In popup blocks direct 'file://' file browsing for security reasons.\n\n" +
+          "To test real Google login, run with a local server (VS Code Live Server ya 'npx serve .') on http://localhost:5500, ya GitHub Pages par host karein!"
+        );
+      }
       throw error;
     }
   },
