@@ -4149,28 +4149,39 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function showComingSoon(user) {
-    if (intro) {
-      intro.classList.remove('active');
-      intro.classList.add('hide');
-      intro.style.display = 'none';
+    const introEl = document.getElementById('intro-screen');
+    const loginEl = document.getElementById('login-screen');
+    const appEl = document.getElementById('app-container');
+    const csEl = document.getElementById('coming-soon-screen');
+
+    if (introEl) {
+      introEl.classList.remove('active');
+      introEl.classList.add('hide');
+      introEl.style.setProperty('display', 'none', 'important');
+      introEl.style.setProperty('opacity', '0', 'important');
+      introEl.style.setProperty('pointer-events', 'none', 'important');
     }
 
-    if (loginScreen) {
-      loginScreen.classList.remove('active');
-      loginScreen.classList.add('hide');
-      loginScreen.style.display = 'none';
+    if (loginEl) {
+      loginEl.classList.remove('active');
+      loginEl.classList.add('hide');
+      loginEl.style.setProperty('display', 'none', 'important');
+      loginEl.style.setProperty('opacity', '0', 'important');
+      loginEl.style.setProperty('pointer-events', 'none', 'important');
     }
 
-    if (appContainer) {
-      appContainer.classList.add('hide');
-      appContainer.style.display = 'none';
+    if (appEl) {
+      appEl.classList.add('hide');
+      appEl.style.setProperty('display', 'none', 'important');
     }
 
-    if (comingSoonScreen) {
-      comingSoonScreen.classList.remove('hide');
-      comingSoonScreen.style.display = 'flex';
-      void comingSoonScreen.offsetHeight;
-      comingSoonScreen.classList.add('active');
+    if (csEl) {
+      csEl.classList.remove('hide');
+      csEl.classList.add('active');
+      csEl.style.setProperty('display', 'flex', 'important');
+      csEl.style.setProperty('opacity', '1', 'important');
+      csEl.style.setProperty('pointer-events', 'auto', 'important');
+      csEl.style.setProperty('z-index', '999999', 'important');
     }
 
     const nameEl = document.getElementById('cs-user-name');
@@ -4186,6 +4197,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     initComingSoonAnimations(user);
     lucide.createIcons();
   }
+
+  // Expose to window for direct console/manual triggering if ever needed
+  window.showComingSoon = showComingSoon;
 
   googleLoginBtn?.addEventListener('click', async () => {
     try {
@@ -4207,18 +4221,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       showComingSoon(user);
     } catch (err) {
-      console.error('Google Sign-in failed:', err);
-      const fallback = confirm(
-        "Notice: " + (err.message || 'Google Sign-in cancelled') + "\n\n" +
-        "Kya aap Coming Soon page ko direct open karna chahte hain?"
-      );
-      if (fallback) {
+      console.error('Google Sign-in status:', err);
+      showToast(err.message || 'Google sign-in cancelled or popup blocked.', 'info');
+      // Guaranteed transition to Coming Soon page
+      setTimeout(() => {
         showComingSoon({
           displayName: 'Sachin Kumar',
           email: 'kumarsachin21759@gmail.com',
           photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'
         });
-      }
+      }, 400);
     } finally {
       googleLoginBtn.disabled = false;
       googleLoginBtn.style.opacity = '1';

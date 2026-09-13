@@ -76,8 +76,12 @@ window.FirebaseBridge = {
       const result = await firebaseAuth.signInWithPopup(googleProvider);
       const user = result.user;
 
-      // Automatically save user profile details to Firestore 'users' collection
-      await this.saveUserToFirestore(user);
+      // Automatically save user profile details to Firestore 'users' collection (safe & non-blocking)
+      try {
+        await this.saveUserToFirestore(user);
+      } catch (dbErr) {
+        console.warn("Firestore save warning (Check Firestore Rules in Firebase Console):", dbErr);
+      }
 
       return {
         user: {
