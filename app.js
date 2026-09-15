@@ -24,7 +24,7 @@ const DEFAULT_DB = {
   profile: {
     name: 'Sachin Kumar',
     nickname: 'Sachii',
-    dob: '2004-05-18',
+    dob: '2000-04-15',
     about: 'Developer, researcher, and digital archivist. Creating visual lifelogs and organizing knowledge.',
     interests: 'AI Ethics, Cybernetics, Generative Art, Typography',
     hobbies: 'Landscape Photography, Urban Travel, Chess, Cycling',
@@ -340,10 +340,10 @@ class AccountManager {
 class LocalDB {
   static getStorageKey(email = null) {
     const activeEmail = (
-      email || 
-      Auth.currentUser?.email || 
-      sessionStorage.getItem('mybook_active_email') || 
-      localStorage.getItem('mybook_session_email') || 
+      email ||
+      Auth.currentUser?.email ||
+      sessionStorage.getItem('mybook_active_email') ||
+      localStorage.getItem('mybook_session_email') ||
       'sachin@mybook.os'
     ).trim().toLowerCase();
     return `mybook_db_${activeEmail}`;
@@ -386,7 +386,7 @@ class LocalDB {
     clone.settings.email = email;
     clone.settings.passwordHash = passwordHash;
     clone.settings.vaultPinHash = vaultPinHash;
-    
+
     // Add personalized welcome entry in journal
     clone.journal.unshift({
       id: 'j_welcome_' + Date.now(),
@@ -414,7 +414,7 @@ class LocalDB {
   static save(table, record) {
     const db = this.getDB();
     if (!db[table]) db[table] = [];
-    
+
     const index = db[table].findIndex(item => item.id === record.id);
     if (index !== -1) {
       db[table][index] = { ...db[table][index], ...record };
@@ -428,7 +428,7 @@ class LocalDB {
   static delete(table, id) {
     const db = this.getDB();
     if (!db[table]) return;
-    
+
     const index = db[table].findIndex(item => item.id === id);
     if (index !== -1) {
       const deletedItem = db[table].splice(index, 1)[0];
@@ -493,7 +493,7 @@ const Auth = {
 
   async init() {
     await AccountManager.seedDefault();
-    
+
     // Check active session
     const sessionEmail = sessionStorage.getItem('mybook_active_email') || localStorage.getItem('mybook_session_email');
     if (sessionEmail) {
@@ -559,7 +559,7 @@ const Auth = {
     try {
       const newAccount = await AccountManager.createAccount({ name, email, password: pwd, pin });
       LocalDB.initForUser(newAccount.email, newAccount.name, newAccount.passwordHash, newAccount.vaultPinHash);
-      
+
       this.currentUser = newAccount;
       this.isUnlocked = true;
       sessionStorage.setItem('mybook_active_email', newAccount.email);
@@ -655,7 +655,7 @@ function updateSidebarUserDisplay() {
   const db = LocalDB.getDB();
   const profile = db.profile || {};
   const email = Auth.currentUser?.email || LocalDB.getSettings().userId || 'sachin@mybook.os';
-  
+
   const nameEl = document.getElementById('sb-user-name');
   const titleEl = document.getElementById('sb-user-title');
   const picEl = document.getElementById('sb-profile-pic');
@@ -712,12 +712,12 @@ function initParticles() {
   const canvas = document.getElementById('particle-canvas');
   const ctx = canvas.getContext('2d');
   let particles = [];
-  
+
   function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   }
-  
+
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
@@ -783,14 +783,14 @@ class AppRouter {
     const hash = window.location.hash || '#dashboard';
     const viewName = hash.replace('#', '');
     const activeSection = document.getElementById(`view-${viewName}`);
-    
+
     if (activeSection) {
       // Toggle active states in workspace
       document.querySelectorAll('.workspace-view').forEach(view => {
         view.classList.remove('active');
       });
       activeSection.classList.add('active');
-      
+
       // Update sidebar nav items
       document.querySelectorAll('.menu-item').forEach(item => {
         item.classList.remove('active');
@@ -818,7 +818,7 @@ function showToast(message, type = 'success') {
   const hub = document.getElementById('toast-hub');
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  
+
   let iconName = 'check-circle';
   if (type === 'error') iconName = 'alert-triangle';
   if (type === 'info') iconName = 'info';
@@ -855,7 +855,7 @@ const ChartBuilder = {
 
     const colors = ['#9d4edd', '#06d6a0', '#ff9e00', '#3a86c8', '#ff4d6d', '#8e94a6', '#00f5d4', '#7b2cbf'];
     let svgPathContent = '';
-    
+
     // Draw paths
     categories.forEach((cat, index) => {
       const color = colors[index % colors.length];
@@ -880,7 +880,7 @@ const ChartBuilder = {
       const sY = startY * radius;
       const eX = endX * radius;
       const eY = endY * radius;
-      
+
       const sX_in = startX * innerRadius;
       const sY_in = startY * innerRadius;
       const eX_in = endX * innerRadius;
@@ -1261,7 +1261,7 @@ const ViewController = {
 
   renderJournal(el) {
     const journal = LocalDB.get('journal').filter(j => !j.archived);
-    
+
     // Sort and filter setup
     const listHtml = journal.map(j => {
       const photosHtml = (j.photos || []).map(p => `<div class="journal-photo-thumbnail" style="background-image: url('${p}')" onclick="ViewController.openImageViewer('${p}')"></div>`).join('');
@@ -1344,13 +1344,13 @@ const ViewController = {
 
   renderMemories(el) {
     const memories = LocalDB.get('memories');
-    
+
     // Check "On This Day" matches (month/day matches current date in previous years)
     const today = new Date();
     const currentMonth = today.getMonth() + 1;
     const currentDay = today.getDate();
     const currentYear = today.getFullYear();
-    
+
     const onThisDay = memories.filter(m => {
       const mDate = new Date(m.date);
       return (mDate.getMonth() + 1) === currentMonth && mDate.getDate() === currentDay && mDate.getFullYear() < currentYear;
@@ -1415,7 +1415,7 @@ const ViewController = {
 
   renderTravel(el) {
     const trips = LocalDB.get('trips');
-    
+
     // Stats calculation
     const totalSpent = trips.reduce((sum, t) => sum + (t.totalExpense || 0), 0);
     const favCount = trips.filter(t => t.favorite).length;
@@ -1584,7 +1584,7 @@ const ViewController = {
     const sems = college.semesters || [];
 
     const activeSem = sems[0] || { name: 'No Active Semester', subjects: [], assignments: [] };
-    
+
     const subHtml = (activeSem.subjects || []).map(s => `
       <div class="task-row glass-panel" style="padding:16px;">
         <div>
@@ -1650,7 +1650,7 @@ const ViewController = {
 
   renderSkills(el) {
     const skills = LocalDB.get('skills');
-    
+
     const listHtml = skills.map(s => `
       <div class="skill-card glass-panel interactive-card" onclick="ViewController.openSkillDetails('${s.id}')">
         <div class="skill-circle-progress">
@@ -1775,7 +1775,7 @@ const ViewController = {
   renderNotes(el) {
     const notes = LocalDB.get('notes').filter(n => !n.archived);
     const hasVaultAccess = Auth.isVaultUnlocked;
-    
+
     // Sort logic and list html
     const listHtml = notes.map(n => `
       <div class="note-sidebar-item glass-panel" onclick="ViewController.selectActiveNote('${n.id}')">
@@ -2154,11 +2154,11 @@ const ViewController = {
 
   queryLocalDatabase(query) {
     const text = query.toLowerCase();
-    
+
     // 1. Money/Expense searches
     if (text.includes('spend') || text.includes('expense') || text.includes('cost') || text.includes('outflow')) {
       const expenses = LocalDB.get('expenses');
-      
+
       // Category specific
       let matchCat = '';
       const categories = ['Food', 'Shopping', 'Travel', 'Bills', 'Entertainment', 'Health', 'College'];
@@ -2588,7 +2588,7 @@ const ViewController = {
       t.completed = !t.completed;
       LocalDB.save('tasks', t);
       showToast(t.completed ? 'Task Completed! 🎉' : 'Task reopened.', 'success');
-      
+
       const currentHash = window.location.hash || '#dashboard';
       if (currentHash === '#dashboard') this.render('dashboard');
       else this.render('tasks');
@@ -2746,7 +2746,7 @@ const ViewController = {
     this.closeModal();
     showToast('Profile updated successfully.', 'success');
     this.render('profile');
-    
+
     // Update sidebar profile card info
     updateSidebarUserDisplay();
   },
@@ -2895,7 +2895,7 @@ const ViewController = {
       j.content = document.getElementById('mj-desc').value;
       const photo = document.getElementById('mj-photo').value;
       j.photos = photo ? [photo] : [];
-      
+
       LocalDB.save('journal', j);
       this.closeModal();
       showToast('Journal entry modified.', 'success');
@@ -3090,7 +3090,7 @@ const ViewController = {
     };
 
     LocalDB.save('trips', record);
-    
+
     // Auto add travel expense to expense module
     const expRecord = {
       id: 'ex_' + Date.now(),
@@ -3312,7 +3312,7 @@ const ViewController = {
     const db = LocalDB.getDB();
     if (!db.college) db.college = { profile: {}, semesters: [] };
     db.college.profile = { university: uni, degree: 'B.Tech CS', cgpa: cgpa, currentSemester: semName };
-    
+
     // Add new sem if not existing
     const hasSem = db.college.semesters.find(s => s.name === semName);
     if (!hasSem) {
@@ -3806,7 +3806,7 @@ const ViewController = {
     document.querySelectorAll('.note-sidebar-item').forEach(item => {
       item.classList.remove('active');
     });
-    
+
     const pane = document.getElementById('note-view-pane');
     if (pane) {
       pane.innerHTML = `
@@ -4103,7 +4103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   // Play cinematic intro for 3 seconds, or allow immediate click/skip
-  setTimeout(finishIntro, 3000);
+  setTimeout(finishIntro, 4000);
   intro?.addEventListener('click', finishIntro);
   document.getElementById('intro-skip-btn')?.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -4184,7 +4184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             pin: '1234'
           });
         }
-        
+
         // Update profile in LocalDB
         const db = LocalDB.getDB(account.email);
         if (db && db.profile) {
@@ -4388,12 +4388,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (ok) {
       document.getElementById('vault-pin-modal').classList.add('hide');
       document.getElementById('vault-pin-input').value = '';
-      
+
       const indicatorBtn = document.getElementById('quick-vault-btn');
       indicatorBtn.classList.add('unlocked');
       indicatorBtn.innerHTML = `<i data-lucide="unlock"></i><span>Vault Unlocked</span>`;
       lucide.createIcons();
-      
+
       showToast('Vault credentials approved.', 'success');
       ViewController.render(window.location.hash.replace('#', '') || 'dashboard');
     } else {
@@ -4455,7 +4455,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const results = [];
-    
+
     // Search journal
     LocalDB.get('journal').forEach(j => {
       if (j.title.toLowerCase().includes(query) || j.content.toLowerCase().includes(query)) {
