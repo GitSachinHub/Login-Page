@@ -338,32 +338,95 @@ class AccountManager {
 }
 // --- LocalDB Manager (Per-Email Isolated Persistent Storage) ---
 class LocalDB {
+  static isSachinAccount(email) {
+    if (!email) return false;
+    const clean = email.trim().toLowerCase();
+    return clean === 'kumarsachin21759@gmail.com' || clean === 'sachin@mybook.os' || clean === 'admin';
+  }
+
+  static createEmptyUserDB(email, name, passwordHash = '', vaultPinHash = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92') {
+    const cleanName = name || email.split('@')[0] || 'User';
+    return {
+      settings: {
+        userId: email,
+        email: email,
+        passwordHash: passwordHash,
+        vaultPinHash: vaultPinHash, // default 1234
+        theme: 'dark',
+        dateFormat: 'YYYY-MM-DD',
+        vaultAutoLockMin: 2,
+        sessionAutoLockMin: 15
+      },
+      profile: {
+        name: cleanName,
+        nickname: cleanName.split(' ')[0] || cleanName,
+        dob: '',
+        about: 'Personal archive and digital life OS for ' + cleanName + '.',
+        interests: '',
+        hobbies: '',
+        avatar: '',
+        education: [],
+        achievements: []
+      },
+      journal: [
+        {
+          id: 'j_welcome_' + Date.now(),
+          date: new Date().toISOString().split('T')[0],
+          title: 'Welcome to My Book, ' + (cleanName.split(' ')[0] || cleanName) + '! 👋',
+          content: 'Welcome to your private Life OS. Here you can privately organize your journals, memories, travels, expenses, projects, goals, notes, and documents. Everything you add is securely stored in your own isolated personal space.',
+          mood: '🚀 Excited',
+          location: 'Command Center',
+          people: [cleanName],
+          tags: ['welcome', 'fresh-start'],
+          photos: [],
+          favorite: true,
+          archived: false
+        }
+      ],
+      memories: [],
+      travel: [],
+      expenses: [],
+      college: { subjects: [], exams: [], timetable: [] },
+      skills: [],
+      projects: [],
+      goals: [],
+      notes: [],
+      people: [],
+      tasks: [],
+      documents: [],
+      habits: []
+    };
+  }
+
   static getStorageKey(email = null) {
     const activeEmail = (
       email ||
       Auth.currentUser?.email ||
       sessionStorage.getItem('mybook_active_email') ||
       localStorage.getItem('mybook_session_email') ||
-      'sachin@mybook.os'
+      'kumarsachin21759@gmail.com'
     ).trim().toLowerCase();
-    return `mybook_db_${activeEmail}`;
+    return 'mybook_db_' + activeEmail;
   }
 
   static getDB(email = null) {
     const key = this.getStorageKey(email);
     let raw = localStorage.getItem(key);
     if (!raw) {
-      // Create clone of default db with user personalized profile
-      const clone = JSON.parse(JSON.stringify(DEFAULT_DB));
-      const activeEmail = (email || Auth.currentUser?.email || 'sachin@mybook.os').trim().toLowerCase();
-      const account = AccountManager.getAccount(activeEmail);
-      if (account) {
-        clone.profile.name = account.name;
-        clone.profile.nickname = account.name.split(' ')[0] || account.name;
-        clone.settings.userId = account.email;
-        clone.settings.email = account.email;
-        clone.settings.passwordHash = account.passwordHash;
-        clone.settings.vaultPinHash = account.vaultPinHash;
+      const activeEmail = (email || Auth.currentUser?.email || 'kumarsachin21759@gmail.com').trim().toLowerCase();
+      let clone;
+      if (this.isSachinAccount(activeEmail)) {
+        clone = JSON.parse(JSON.stringify(DEFAULT_DB));
+        const account = AccountManager.getAccount(activeEmail);
+        if (account) {
+          clone.profile.name = account.name;
+          clone.profile.nickname = account.name.split(' ')[0] || account.name;
+          clone.settings.userId = account.email;
+          clone.settings.email = account.email;
+        }
+      } else {
+        const account = AccountManager.getAccount(activeEmail);
+        clone = this.createEmptyUserDB(activeEmail, account?.name || activeEmail.split('@')[0], account?.passwordHash, account?.vaultPinHash);
       }
       raw = JSON.stringify(clone);
       localStorage.setItem(key, raw);
@@ -377,33 +440,22 @@ class LocalDB {
   }
 
   static initForUser(email, name, passwordHash, vaultPinHash) {
-    const key = `mybook_db_${email.trim().toLowerCase()}`;
-    const clone = JSON.parse(JSON.stringify(DEFAULT_DB));
-    clone.profile.name = name;
-    clone.profile.nickname = name.split(' ')[0] || name;
-    clone.profile.about = `Personal archive and digital life OS for ${name}.`;
-    clone.settings.userId = email;
-    clone.settings.email = email;
-    clone.settings.passwordHash = passwordHash;
-    clone.settings.vaultPinHash = vaultPinHash;
-
-    // Add personalized welcome entry in journal
-    clone.journal.unshift({
-      id: 'j_welcome_' + Date.now(),
-      date: new Date().toISOString().split('T')[0],
-      title: `Welcome to My Book Life OS, ${name.split(' ')[0]}!`,
-      content: `Today marks the beginning of my digital archive on My Book. All my journals, memories, finances, projects, and documents are securely stored here under ${email}.`,
-      mood: '🚀 Excited',
-      location: 'Command Center',
-      people: [name],
-      tags: ['welcome', 'life-os', 'fresh-start'],
-      photos: [],
-      favorite: true,
-      archived: false
-    });
-
-    localStorage.setItem(key, JSON.stringify(clone));
-    return clone;
+    const cleanEmail = email.trim().toLowerCase();
+    const key = 'mybook_db_' + cleanEmail;
+    let db;
+    if (this.isSachinAccount(cleanEmail)) {
+      db = JSON.parse(JSON.stringify(DEFAULT_DB));
+      db.profile.name = name;
+      db.profile.nickname = name.split(' ')[0] || name;
+      db.settings.userId = cleanEmail;
+      db.settings.email = cleanEmail;
+      if (passwordHash) db.settings.passwordHash = passwordHash;
+      if (vaultPinHash) db.settings.vaultPinHash = vaultPinHash;
+    } else {
+      db = this.createEmptyUserDB(cleanEmail, name, passwordHash, vaultPinHash);
+    }
+    localStorage.setItem(key, JSON.stringify(db));
+    return db;
   }
 
   static get(table) {
@@ -583,18 +635,35 @@ const Auth = {
     localStorage.removeItem('mybook_session_email');
 
     // Reset UI
-    document.getElementById('app-container').classList.add('hide');
+    const appContainer = document.getElementById('app-container');
+    if (appContainer) {
+      appContainer.classList.add('hide');
+      appContainer.style.display = 'none';
+    }
     const loginScreen = document.getElementById('login-screen');
-    loginScreen.classList.remove('hide');
-    loginScreen.classList.add('active');
+    if (loginScreen) {
+      loginScreen.classList.remove('hide');
+      loginScreen.classList.add('active');
+    }
 
-    // Reset forms
+    // Switch to Sign In panel as default
+    const loginPanel = document.getElementById('auth-login-panel');
+    const registerPanel = document.getElementById('auth-register-panel');
+    if (loginPanel) {
+      loginPanel.classList.remove('hide');
+      loginPanel.classList.add('active');
+    }
+    if (registerPanel) {
+      registerPanel.classList.add('hide');
+      registerPanel.classList.remove('active');
+    }
+
+    // Reset forms and error banners
     document.getElementById('login-form')?.reset();
     document.getElementById('register-form')?.reset();
     document.getElementById('login-error')?.classList.add('hide');
     document.getElementById('register-error')?.classList.add('hide');
 
-    renderSavedAccounts();
     showToast('Signed out. Life OS Locked.', 'info');
   },
 
@@ -968,6 +1037,123 @@ const ChartBuilder = {
 };
 
 // --- View Controllers: Generate HTML dynamically ---
+
+// ============================================================
+// 📸 UNIVERSAL DUAL PHOTO INPUT (DEVICE UPLOAD + URL)
+// ============================================================
+function renderPhotoInputGroup({ inputId, label = 'Photo Attachment', value = '', placeholder = 'Paste image link or choose from device...' }) {
+  const hasValue = Boolean(value && value.trim());
+  return `
+    <div class="form-group photo-upload-group" id="group-${inputId}">
+      <div class="photo-upload-header">
+        <label for="${inputId}">${label}</label>
+        <span class="photo-hint">URL or Device File</span>
+      </div>
+      <div class="input-wrapper photo-input-wrapper">
+        <i data-lucide="image"></i>
+        <input type="text" id="${inputId}" value="${value || ''}" placeholder="${placeholder}" autocomplete="off" oninput="updatePhotoPreview('${inputId}', this.value)">
+        <label for="${inputId}-file" class="device-upload-btn" title="Choose photo from your computer or phone">
+          <i data-lucide="upload-cloud"></i>
+          <span>Upload File</span>
+        </label>
+        <input type="file" id="${inputId}-file" accept="image/*" style="display:none;" onchange="handleDeviceImageFile('${inputId}', this)">
+      </div>
+      <div id="${inputId}-preview-box" class="photo-preview-box ${hasValue ? '' : 'hide'}">
+        <img id="${inputId}-preview-img" src="${value || ''}" alt="Photo preview" class="photo-preview-thumb">
+        <div class="photo-preview-meta">
+          <span class="photo-preview-title">Image selected</span>
+          <button type="button" class="photo-remove-btn" onclick="clearPhotoInput('${inputId}')">
+            <i data-lucide="trash-2"></i> Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function handleDeviceImageFile(inputId, fileInput) {
+  const file = fileInput.files?.[0];
+  if (!file) return;
+
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('File is too large. Please select an image under 10MB.', 'error');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const rawDataUrl = e.target.result;
+    compressImage(rawDataUrl, 1200, 0.82, function(compressedDataUrl) {
+      const textInput = document.getElementById(inputId);
+      if (textInput) {
+        textInput.value = compressedDataUrl;
+        textInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      updatePhotoPreview(inputId, compressedDataUrl);
+      showToast('Photo uploaded from device successfully! 📸', 'success');
+      if (window.lucide) lucide.createIcons();
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function compressImage(src, maxDimension, quality, callback) {
+  const img = new Image();
+  img.onload = function() {
+    let width = img.width;
+    let height = img.height;
+    if (width > maxDimension || height > maxDimension) {
+      if (width > height) {
+        height = Math.round((height * maxDimension) / width);
+        width = maxDimension;
+      } else {
+        width = Math.round((width * maxDimension) / height);
+        height = maxDimension;
+      }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, width, height);
+    const compressed = canvas.toDataURL('image/jpeg', quality);
+    callback(compressed);
+  };
+  img.onerror = function() {
+    callback(src);
+  };
+  img.src = src;
+}
+
+function updatePhotoPreview(inputId, url) {
+  const previewBox = document.getElementById(inputId + '-preview-box');
+  const previewImg = document.getElementById(inputId + '-preview-img');
+  if (!previewBox || !previewImg) return;
+
+  if (url && url.trim()) {
+    previewImg.src = url.trim();
+    previewBox.classList.remove('hide');
+  } else {
+    previewBox.classList.add('hide');
+    previewImg.src = '';
+  }
+}
+
+function clearPhotoInput(inputId) {
+  const textInput = document.getElementById(inputId);
+  const fileInput = document.getElementById(inputId + '-file');
+  if (textInput) textInput.value = '';
+  if (fileInput) fileInput.value = '';
+  updatePhotoPreview(inputId, '');
+}
+
+// Make globally accessible
+window.renderPhotoInputGroup = renderPhotoInputGroup;
+window.handleDeviceImageFile = handleDeviceImageFile;
+window.updatePhotoPreview = updatePhotoPreview;
+window.clearPhotoInput = clearPhotoInput;
+
+
 const ViewController = {
   openVaultPinModal() {
     const modal = document.getElementById('vault-pin-modal');
@@ -2571,10 +2757,7 @@ const ViewController = {
           <label>Entry Description</label>
           <div class="input-wrapper"><textarea id="mj-desc" required placeholder="Write your heart out..."></textarea></div>
         </div>
-        <div class="form-group">
-          <label>Photo Attachment Link</label>
-          <div class="input-wrapper"><input type="text" id="mj-photo" placeholder="https://images.unsplash.com/..."></div>
-        </div>
+        ${renderPhotoInputGroup({ inputId: "mj-photo", label: "Photo Attachment (Optional)", placeholder: "Paste image link or choose from device..." })}
         <div class="modal-actions">
           <button type="button" class="secondary-btn" onclick="ViewController.closeModal()">Cancel</button>
           <button type="submit" class="primary-btn">Save Entry</button>
@@ -2748,10 +2931,7 @@ const ViewController = {
           <label>Hobbies (comma separated)</label>
           <div class="input-wrapper"><input type="text" id="mp-hobbies" value="${profile.hobbies || ''}"></div>
         </div>
-        <div class="form-group">
-          <label>Profile Picture URL</label>
-          <div class="input-wrapper"><input type="text" id="mp-avatar" value="${profile.avatar || ''}"></div>
-        </div>
+        ${renderPhotoInputGroup({ inputId: "mp-avatar", label: "Profile Picture", value: profile.avatar || "", placeholder: "Paste image URL or upload from device..." })}
         <div class="modal-actions">
           <button type="button" class="secondary-btn" onclick="ViewController.closeModal()">Cancel</button>
           <button type="submit" class="primary-btn">Save Profile</button>
@@ -2902,10 +3082,7 @@ const ViewController = {
           <label>Entry Description</label>
           <div class="input-wrapper"><textarea id="mj-desc" required>${j.content}</textarea></div>
         </div>
-        <div class="form-group">
-          <label>Photo Link (Overwrite/Update)</label>
-          <div class="input-wrapper"><input type="text" id="mj-photo" value="${j.photos[0] || ''}"></div>
-        </div>
+        ${renderPhotoInputGroup({ inputId: "mj-photo", label: "Photo Attachment (Optional)", value: j.photos[0] || "", placeholder: "Paste image link or choose from device..." })}
         <div class="modal-actions">
           <button type="button" class="secondary-btn" onclick="ViewController.closeModal()">Cancel</button>
           <button type="submit" class="primary-btn">Save Updates</button>
@@ -2958,10 +3135,7 @@ const ViewController = {
           <label>Story / Details</label>
           <div class="input-wrapper"><textarea id="mm-story" required placeholder="How did this memory feel?"></textarea></div>
         </div>
-        <div class="form-group">
-          <label>Photo URL</label>
-          <div class="input-wrapper"><input type="text" id="mm-photo" placeholder="https://images.unsplash.com/..."></div>
-        </div>
+        ${renderPhotoInputGroup({ inputId: "mm-photo", label: "Memory Photo (Optional)", placeholder: "Paste image link or choose from device..." })}
         <div class="modal-actions">
           <button type="button" class="secondary-btn" onclick="ViewController.closeModal()">Cancel</button>
           <button type="submit" class="primary-btn">Save Memory</button>
@@ -3076,10 +3250,7 @@ const ViewController = {
           <label>Total Budget Expense</label>
           <div class="input-wrapper"><input type="number" id="mtr-budget" placeholder="10000" required></div>
         </div>
-        <div class="form-group">
-          <label>Cover Photo URL</label>
-          <div class="input-wrapper"><input type="text" id="mtr-photo" placeholder="https://images.unsplash.com/..."></div>
-        </div>
+        ${renderPhotoInputGroup({ inputId: "mtr-photo", label: "Trip Cover Photo (Optional)", placeholder: "Paste image link or choose from device..." })}
         <div class="form-group">
           <label>Notes</label>
           <div class="input-wrapper"><textarea id="mtr-notes" placeholder="Write logs, travel schedules..."></textarea></div>
@@ -3499,10 +3670,7 @@ const ViewController = {
           <label>GitHub Repository URL</label>
           <div class="input-wrapper"><input type="text" id="mpr-git" placeholder="https://github.com/user/repo"></div>
         </div>
-        <div class="form-group">
-          <label>Cover Photo Screenshot Link</label>
-          <div class="input-wrapper"><input type="text" id="mpr-photo" placeholder="https://images.unsplash.com/..."></div>
-        </div>
+        ${renderPhotoInputGroup({ inputId: "mpr-photo", label: "Project Screenshot / Preview", placeholder: "Paste image link or choose from device..." })}
         <div class="modal-actions">
           <button type="button" class="secondary-btn" onclick="ViewController.closeModal()">Cancel</button>
           <button type="submit" class="primary-btn">Save Project</button>
@@ -3578,10 +3746,7 @@ const ViewController = {
           <label>GitHub Repository URL</label>
           <div class="input-wrapper"><input type="text" id="mpr-git" value="${p.github || ''}"></div>
         </div>
-        <div class="form-group">
-          <label>Cover Photo Screenshot Link</label>
-          <div class="input-wrapper"><input type="text" id="mpr-photo" value="${p.screenshots[0] || ''}"></div>
-        </div>
+        ${renderPhotoInputGroup({ inputId: "mpr-photo", label: "Project Screenshot / Preview", value: p.screenshots[0] || "", placeholder: "Paste image link or choose from device..." })}
         <div class="modal-actions">
           <button type="button" class="secondary-btn" style="color:var(--accent-rose); margin-right:auto;" onclick="ViewController.deleteProject('${id}')">Delete</button>
           <button type="button" class="secondary-btn" onclick="ViewController.closeModal()">Cancel</button>
@@ -4142,118 +4307,117 @@ document.addEventListener('DOMContentLoaded', async () => {
     finishIntro();
   });
 
-  // Tab switching: Sign In vs Create Account
-  const tabLoginBtn = document.getElementById('tab-login-btn');
-  const tabRegisterBtn = document.getElementById('tab-register-btn');
+  // --- Authentication Experience (Login, Register, Google Auth & Forgot Password) ---
   const loginPanel = document.getElementById('auth-login-panel');
   const registerPanel = document.getElementById('auth-register-panel');
   const switchToRegisterBtn = document.getElementById('switch-to-register-btn');
   const switchToLoginBtn = document.getElementById('switch-to-login-btn');
 
-  function showLoginTab() {
-    tabLoginBtn?.classList.add('active');
-    tabRegisterBtn?.classList.remove('active');
-    loginPanel?.classList.remove('hide');
-    registerPanel?.classList.add('hide');
-    document.getElementById('login-error')?.classList.add('hide');
-    document.getElementById('login-email')?.focus();
-    lucide.createIcons();
-  }
-
-  function showRegisterTab() {
-    tabRegisterBtn?.classList.add('active');
-    tabLoginBtn?.classList.remove('active');
-    registerPanel?.classList.remove('hide');
-    loginPanel?.classList.add('hide');
-    document.getElementById('register-error')?.classList.add('hide');
-    document.getElementById('reg-name')?.focus();
-    lucide.createIcons();
-  }
-
-  tabLoginBtn?.addEventListener('click', showLoginTab);
-  tabRegisterBtn?.addEventListener('click', showRegisterTab);
-  switchToRegisterBtn?.addEventListener('click', showRegisterTab);
-  switchToLoginBtn?.addEventListener('click', showLoginTab);
-
-  // 1-Click Quick Fill for Sachin's Gmail Account
-  document.getElementById('demo-fill-btn')?.addEventListener('click', () => {
-    const emailInput = document.getElementById('login-email');
-    const pwdInput = document.getElementById('login-password');
-    if (emailInput && pwdInput) {
-      emailInput.value = 'kumarsachin21759@gmail.com';
-      pwdInput.value = 'password123';
-      showToast('Filled Sachin\'s credentials (kumarsachin21759@gmail.com)', 'info');
-      document.getElementById('login-submit-btn')?.focus();
+  function showRegisterScreen() {
+    if (loginPanel && registerPanel) {
+      loginPanel.classList.remove('active');
+      loginPanel.classList.add('hide');
+      registerPanel.classList.remove('hide');
+      registerPanel.classList.add('active');
+      document.getElementById('register-error')?.classList.add('hide');
+      document.getElementById('reg-name')?.focus();
+      if (window.lucide) lucide.createIcons();
     }
-  });
+  }
 
-  // Google Sign-In Handler (Firebase & Firestore sync + direct enterApp)
-  const googleLoginBtn = document.getElementById('google-login-btn');
-  googleLoginBtn?.addEventListener('click', async () => {
+  function showLoginScreen() {
+    if (loginPanel && registerPanel) {
+      registerPanel.classList.remove('active');
+      registerPanel.classList.add('hide');
+      loginPanel.classList.remove('hide');
+      loginPanel.classList.add('active');
+      document.getElementById('login-error')?.classList.add('hide');
+      document.getElementById('login-email')?.focus();
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+
+  switchToRegisterBtn?.addEventListener('click', showRegisterScreen);
+  switchToLoginBtn?.addEventListener('click', showLoginScreen);
+
+  // Common Google Sign-In Function (Works on both Login & Register screens)
+  async function performGoogleAuth(buttonElement) {
     if (!window.FirebaseBridge) {
-      showToast('Initializing Google Auth... please wait a moment.', 'info');
+      showToast('Initializing authentication bridge... please wait.', 'info');
       return;
     }
 
-    const originalHTML = googleLoginBtn.innerHTML;
+    const originalHTML = buttonElement.innerHTML;
     try {
-      googleLoginBtn.disabled = true;
-      googleLoginBtn.style.opacity = '0.8';
-      googleLoginBtn.innerHTML = `
-        <span class="pulse-dot" style="width:10px; height:10px; display:inline-block; margin-right:8px;"></span>
-        <span>Connecting Google Account...</span>
-      `;
+      buttonElement.disabled = true;
+      buttonElement.style.opacity = '0.75';
+      buttonElement.innerHTML = '<span class="pulse-dot" style="width:8px; height:8px; display:inline-block; margin-right:8px;"></span><span>Connecting Google...</span>';
 
       const result = await window.FirebaseBridge.loginWithGoogle();
 
       if (result && result.user) {
-        let account = AccountManager.getAccount(result.user.email);
+        const userEmail = result.user.email.toLowerCase().trim();
+        let account = AccountManager.getAccount(userEmail);
+
         if (!account) {
+          // New Google user: create fresh account with empty, clean data space
           account = await AccountManager.createAccount({
-            name: result.user.displayName || 'Sachin Kumar',
-            email: result.user.email,
-            password: 'GoogleUser_' + Date.now(),
+            name: result.user.displayName || userEmail.split('@')[0],
+            email: userEmail,
+            password: 'GoogleAuth_' + Date.now(),
             pin: '1234'
           });
+          // Initialize fresh isolated user DB
+          LocalDB.initForUser(userEmail, account.name, account.passwordHash, account.vaultPinHash);
         }
 
-        // Update profile in LocalDB
-        const db = LocalDB.getDB(account.email);
+        // Sync Google avatar if present and not set
+        const db = LocalDB.getDB(userEmail);
         if (db && db.profile) {
-          db.profile.name = result.user.displayName || db.profile.name;
-          if (result.user.photoURL) db.profile.avatar = result.user.photoURL;
-          LocalDB.writeDB(db, account.email);
+          if (result.user.displayName && !db.profile.name) db.profile.name = result.user.displayName;
+          if (result.user.photoURL && !db.profile.avatar) db.profile.avatar = result.user.photoURL;
+          LocalDB.writeDB(db, userEmail);
         }
 
         Auth.currentUser = account;
         Auth.isUnlocked = true;
-        sessionStorage.setItem('mybook_active_email', account.email);
-        localStorage.setItem('mybook_session_email', account.email);
+        sessionStorage.setItem('mybook_active_email', userEmail);
+        localStorage.setItem('mybook_session_email', userEmail);
+
+        document.getElementById('login-error')?.classList.add('hide');
+        document.getElementById('register-error')?.classList.add('hide');
 
         enterApp();
-        showToast(`Welcome, ${result.user.displayName || 'Sachin'}! Google sign-in successful.`, 'success');
+        showToast('Welcome back, ' + (account.name || 'User') + '! Authenticated with Google.', 'success');
       }
     } catch (err) {
-      console.warn('Google Sign-in fallback note:', err);
-      // Fallback: unlock Sachin's default profile smoothly
-      const fallbackAcc = AccountManager.getAccount('kumarsachin21759@gmail.com') || AccountManager.getAccount('sachin@mybook.os');
-      if (fallbackAcc) {
-        Auth.currentUser = fallbackAcc;
-        Auth.isUnlocked = true;
-        sessionStorage.setItem('mybook_active_email', fallbackAcc.email);
-        localStorage.setItem('mybook_session_email', fallbackAcc.email);
-        enterApp();
-        showToast('Welcome, Sachin Kumar! Life OS unlocked.', 'success');
+      console.warn('Google auth notice:', err);
+      const friendlyMsg = window.FirebaseBridge.getFriendlyErrorMessage ? window.FirebaseBridge.getFriendlyErrorMessage(err) : 'Google sign-in was cancelled or encountered an issue.';
+      const activeErrBox = (registerPanel && !registerPanel.classList.contains('hide')) ? document.getElementById('register-error') : document.getElementById('login-error');
+      const activeErrText = (registerPanel && !registerPanel.classList.contains('hide')) ? document.getElementById('register-error-text') : document.getElementById('login-error-text');
+      if (activeErrBox && activeErrText) {
+        activeErrBox.classList.remove('hide');
+        activeErrText.innerText = friendlyMsg;
+      } else {
+        showToast(friendlyMsg, 'error');
       }
     } finally {
-      googleLoginBtn.disabled = false;
-      googleLoginBtn.style.opacity = '1';
-      googleLoginBtn.innerHTML = originalHTML;
-      lucide.createIcons();
+      buttonElement.disabled = false;
+      buttonElement.style.opacity = '1';
+      buttonElement.innerHTML = originalHTML;
+      if (window.lucide) lucide.createIcons();
     }
+  }
+
+  document.getElementById('google-login-btn')?.addEventListener('click', function() {
+    performGoogleAuth(this);
   });
 
-  // Sign In Form Submission (Gmail & Password)
+  document.getElementById('google-register-btn')?.addEventListener('click', function() {
+    performGoogleAuth(this);
+  });
+
+  // Sign In Form Submission (Email + Password)
   document.getElementById('login-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('login-email').value.trim();
@@ -4262,13 +4426,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const errBox = document.getElementById('login-error');
     const errText = document.getElementById('login-error-text');
     const submitBtn = document.getElementById('login-submit-btn');
+    const submitBtnText = document.getElementById('login-btn-text');
+
+    if (!email || !pwd) {
+      errBox?.classList.remove('hide');
+      if (errText) errText.innerText = 'Please enter both your email address and password.';
+      return;
+    }
 
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span>Verifying Credentials...</span>`;
+      if (submitBtnText) submitBtnText.innerText = 'Signing you in...';
     }
 
-    // 1. Try Firebase Email Login if configured
     let firebaseUser = null;
     if (window.FirebaseBridge && window.FirebaseBridge.isConfigured) {
       try {
@@ -4277,23 +4447,21 @@ document.addEventListener('DOMContentLoaded', async () => {
           firebaseUser = fbRes.user;
         }
       } catch (fbErr) {
-        console.warn('Firebase login note:', fbErr.message);
+        console.warn('Firebase login check:', fbErr.message);
       }
     }
 
-    // 2. Authenticate locally via AccountManager
     const result = await Auth.login(email, pwd, remember);
 
     if (result.success) {
       errBox?.classList.add('hide');
       enterApp();
-      showToast(`Welcome back, ${result.user.name}! Life OS ready.`, 'success');
+      showToast('Welcome back, ' + result.user.name + '! Life OS ready.', 'success');
     } else if (firebaseUser) {
-      // If Firebase verified but local didn't have it, auto-create local account
       let account = AccountManager.getAccount(email);
       if (!account) {
         account = await AccountManager.createAccount({
-          name: firebaseUser.displayName || 'Sachin Kumar',
+          name: firebaseUser.displayName || email.split('@')[0],
           email: email,
           password: pwd,
           pin: '1234'
@@ -4306,10 +4474,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       errBox?.classList.add('hide');
       enterApp();
-      showToast(`Welcome, ${account.name}! Authenticated with Firebase.`, 'success');
+      showToast('Welcome, ' + account.name + '! Authenticated with Firebase.', 'success');
     } else {
       errBox?.classList.remove('hide');
-      if (errText) errText.innerText = result.message;
+      if (errText) {
+        errText.innerText = 'Incorrect email or password. Please try again.';
+      }
       errBox.style.animation = 'none';
       errBox.offsetHeight;
       errBox.style.animation = 'shake 0.4s ease-in-out';
@@ -4317,22 +4487,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = `<span>Unlock Command Center</span><i data-lucide="arrow-right"></i>`;
-      lucide.createIcons();
+      if (submitBtnText) submitBtnText.innerText = 'Sign In';
+      if (window.lucide) lucide.createIcons();
     }
   });
 
-  // Register Form Submission (Create Account)
+  // Register Form Submission (Create My Book)
   document.getElementById('register-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('reg-name').value.trim();
     const email = document.getElementById('reg-email').value.trim();
     const pwd = document.getElementById('reg-password').value;
     const confirmPwd = document.getElementById('reg-confirm-password').value;
-    const pin = document.getElementById('reg-pin').value;
     const errBox = document.getElementById('register-error');
     const errText = document.getElementById('register-error-text');
+    const submitBtn = document.getElementById('reg-submit-btn');
+    const submitBtnText = document.getElementById('reg-btn-text');
 
+    if (!name) {
+      errBox.classList.remove('hide');
+      errText.innerText = 'Please enter your name.';
+      return;
+    }
+    if (!email || !email.includes('@')) {
+      errBox.classList.remove('hide');
+      errText.innerText = 'Please enter a valid email address.';
+      return;
+    }
+    if (pwd.length < 6) {
+      errBox.classList.remove('hide');
+      errText.innerText = 'Password must be at least 6 characters long.';
+      return;
+    }
     if (pwd !== confirmPwd) {
       errBox.classList.remove('hide');
       errText.innerText = 'Passwords do not match. Please verify.';
@@ -4342,40 +4528,70 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Try Firebase Email Registration if configured
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      if (submitBtnText) submitBtnText.innerText = 'Creating your My Book...';
+    }
+
+    // Attempt Firebase Registration if configured
     if (window.FirebaseBridge && window.FirebaseBridge.isConfigured) {
       try {
         await window.FirebaseBridge.registerWithEmail(email, pwd, name);
       } catch (fbErr) {
-        console.warn('Firebase registration note:', fbErr.message);
+        console.warn('Firebase registration check:', fbErr.message);
+        if (fbErr.code === 'auth/email-already-in-use') {
+          errBox.classList.remove('hide');
+          errText.innerText = 'An account with this email already exists. Please sign in.';
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            if (submitBtnText) submitBtnText.innerText = 'Create My Book';
+          }
+          return;
+        }
       }
     }
 
-    const result = await Auth.register(name, email, pwd, pin);
+    const result = await Auth.register(name, email, pwd, '1234');
     if (result.success) {
       errBox.classList.add('hide');
       enterApp();
-      showToast(`Account created! Welcome to My Book, ${result.user.name}.`, 'success');
+      showToast('Account created! Welcome to My Book, ' + result.user.name + '.', 'success');
     } else {
       errBox.classList.remove('hide');
-      errText.innerText = result.message;
+      errText.innerText = result.message || 'Unable to create account. Please try again.';
       errBox.style.animation = 'none';
       errBox.offsetHeight;
       errBox.style.animation = 'shake 0.4s ease-in-out';
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      if (submitBtnText) submitBtnText.innerText = 'Create My Book';
+      if (window.lucide) lucide.createIcons();
     }
   });
 
   // Password Visibility Toggles
   document.getElementById('toggle-pwd-btn')?.addEventListener('click', () => {
     const input = document.getElementById('login-password');
-    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-    input.setAttribute('type', type);
+    const icon = document.getElementById('toggle-pwd-icon');
+    if (input) {
+      const isPwd = input.getAttribute('type') === 'password';
+      input.setAttribute('type', isPwd ? 'text' : 'password');
+      if (icon) icon.setAttribute('data-lucide', isPwd ? 'eye-off' : 'eye');
+      if (window.lucide) lucide.createIcons();
+    }
   });
 
   document.getElementById('toggle-reg-pwd-btn')?.addEventListener('click', () => {
     const input = document.getElementById('reg-password');
-    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-    input.setAttribute('type', type);
+    const icon = document.getElementById('toggle-reg-pwd-icon');
+    if (input) {
+      const isPwd = input.getAttribute('type') === 'password';
+      input.setAttribute('type', isPwd ? 'text' : 'password');
+      if (icon) icon.setAttribute('data-lucide', isPwd ? 'eye-off' : 'eye');
+      if (window.lucide) lucide.createIcons();
+    }
   });
 
   // Password Strength Live Calculation
@@ -4410,6 +4626,77 @@ document.addEventListener('DOMContentLoaded', async () => {
       strengthLabel.style.color = 'var(--accent-emerald)';
     }
   });
+
+  // Forgot Password Modal Flow
+  const forgotPwdModal = document.getElementById('forgot-pwd-modal');
+  const forgotPwdLink = document.getElementById('forgot-pwd-link');
+  const closeResetPwdBtn = document.getElementById('close-reset-pwd-btn');
+  const forgotPwdForm = document.getElementById('forgot-pwd-form');
+  const resetEmailInput = document.getElementById('reset-email');
+  const resetPwdMsg = document.getElementById('reset-pwd-msg');
+  const sendResetPwdBtn = document.getElementById('send-reset-pwd-btn');
+
+  function openForgotPwdModal() {
+    const currentEmail = document.getElementById('login-email')?.value.trim() || '';
+    if (resetEmailInput) resetEmailInput.value = currentEmail;
+    if (resetPwdMsg) {
+      resetPwdMsg.className = 'auth-status-msg hide';
+      resetPwdMsg.innerText = '';
+    }
+    forgotPwdModal?.classList.remove('hide');
+    resetEmailInput?.focus();
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function closeForgotPwdModal() {
+    forgotPwdModal?.classList.add('hide');
+  }
+
+  forgotPwdLink?.addEventListener('click', openForgotPwdModal);
+  closeResetPwdBtn?.addEventListener('click', closeForgotPwdModal);
+  forgotPwdModal?.addEventListener('click', (e) => {
+    if (e.target.id === 'forgot-pwd-modal') closeForgotPwdModal();
+  });
+
+  forgotPwdForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = resetEmailInput.value.trim();
+    if (!email) return;
+
+    if (sendResetPwdBtn) {
+      sendResetPwdBtn.disabled = true;
+      sendResetPwdBtn.innerText = 'Sending...';
+    }
+
+    try {
+      if (window.FirebaseBridge && window.FirebaseBridge.sendPasswordResetEmail) {
+        const res = await window.FirebaseBridge.sendPasswordResetEmail(email);
+        resetPwdMsg.classList.remove('hide');
+        if (res.success) {
+          resetPwdMsg.className = 'auth-status-msg success';
+          resetPwdMsg.innerText = res.message || 'Password reset link sent! Check your inbox.';
+        } else {
+          resetPwdMsg.className = 'auth-status-msg error';
+          resetPwdMsg.innerText = res.message || 'Unable to send reset email. Please try again.';
+        }
+      } else {
+        resetPwdMsg.classList.remove('hide');
+        resetPwdMsg.className = 'auth-status-msg error';
+        resetPwdMsg.innerText = 'Password reset requires an active internet connection to Firebase.';
+      }
+    } catch (err) {
+      resetPwdMsg.classList.remove('hide');
+      resetPwdMsg.className = 'auth-status-msg error';
+      resetPwdMsg.innerText = 'Error sending reset email. Please try again later.';
+    } finally {
+      if (sendResetPwdBtn) {
+        sendResetPwdBtn.disabled = false;
+        sendResetPwdBtn.innerText = 'Send Reset Link';
+      }
+    }
+  });
+
+  
 
   // Private Vault PIN Submission Listener
   document.getElementById('vault-pin-form')?.addEventListener('submit', async (e) => {
